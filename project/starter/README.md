@@ -11,8 +11,6 @@ This system uses multiple specialized AI agents working together to provide comp
 - **Test Coverage Analyzer** - Evaluates test completeness and suggests missing test cases
 - **Refactoring Suggester** - Recommends architectural improvements and refactoring opportunities
 
-
-
 ## What's Provided
 
 This starter includes the infrastructure you need:
@@ -27,7 +25,6 @@ This starter includes the infrastructure you need:
 ## What You Need to Implement
 
 Your tasks:
-
 
 1. **Agent Definitions** (`src/agents/`)
    - Code Quality Analyzer
@@ -46,17 +43,17 @@ Your tasks:
    - Main coordination logic
    - Agent spawning and result aggregation
 
-6. **Main Entry Point** (`src/main.ts`)
+5. **Main Entry Point** (`src/main.ts`)
    - CLI argument parsing
    - Environment validation
    - Report generation
 
-7. **Error Handler** (Recommended) (`src/utils/error-handler.ts`)
+6. **Error Handler** (Recommended) (`src/utils/error-handler.ts`)
    - Custom `ReviewError` class
    - Retry logic with exponential backoff
    - Timeout wrapper
 
-8. **Rate Limiter** (Optional) (`src/utils/rate-limiter.ts`)
+7. **Rate Limiter** (Optional) (`src/utils/rate-limiter.ts`)
    - Token bucket algorithm with sliding window
    - Request and token tracking
    - Concurrent request management
@@ -66,62 +63,76 @@ Your tasks:
 ### Prerequisites
 
 - Node.js 18+
-- **AWS Bedrock Access** (recommended - credentials provided by Udacity) OR [Anthropic API Key](https://console.anthropic.com/)
-- [GitHub Personal Access Token](https://github.com/settings/tokens) (recommended for private repos - scopes: `repo`, `read:org`)
+- Anthropic API access (provided in Vocareum workspace) or [your own API key](https://console.anthropic.com/)
+- [GitHub Personal Access Token](https://github.com/settings/tokens) (recommended - scopes: `repo`, `read:org`)
 
 ### Installation
 
 **In Vocareum Workspace (Recommended):**
+
+Your workspace comes pre-configured with Anthropic API credentials.
+
 ```bash
 # Install dependencies from repository root (uses npm workspaces)
-cd /path/to/repository-root
+cd /voc/work
 npm install
 
-# Copy environment template
+# Navigate to project and configure
 cd project/starter
 cp .env.example .env
-
-# Edit .env with your AWS credentials from Vocareum
 ```
 
-**Local Setup (Alternative):**
+**Local Setup:**
+
 ```bash
-# If you cloned only the starter folder
-cd project/starter
+# Clone the repository
+git clone https://github.com/udacity/cd14715-claude-code-classroom.git
+cd cd14715-claude-code-classroom/project/starter
+
+# Install dependencies
 npm install
 
-# Copy environment template
+# Configure environment
 cp .env.example .env
-
-# Edit .env with your authentication credentials
 ```
 
 ### Configuration
 
-Edit `.env` with **ONE** authentication method:
+Edit `.env` with your settings:
 
-**Method 1: AWS Bedrock (Recommended)**
+**In Vocareum Workspace:**
 ```bash
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key-id
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
-CLAUDE_CODE_USE_BEDROCK=1
-ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
-```
+# API credentials are already in your environment - don't add them here
 
-**Method 2: Anthropic API (Optional)**
-```bash
-ANTHROPIC_API_KEY=sk-ant-...
+# Model Configuration (REQUIRED)
 ANTHROPIC_MODEL=claude-sonnet-4-5-20250929
+
+# Project root (REQUIRED)
+PROJECT_ROOT=/voc/work/project/starter
+
+# GitHub Token (RECOMMENDED for higher rate limits)
+# GITHUB_TOKEN=ghp_your-token-here
+
+# Logging level (optional)
+LOG_LEVEL=info
 ```
 
-**Both methods also need:**
+**Local Setup with Your Own API Key:**
 ```bash
-# Optional - for higher rate limits and private repos
-# GITHUB_TOKEN=ghp_...
+# Your Anthropic API key
+ANTHROPIC_API_KEY=sk-ant-your-key-here
 
-# Required - absolute path to project directory
+# Model Configuration (REQUIRED)
+ANTHROPIC_MODEL=claude-sonnet-4-5-20250929
+
+# Project root (REQUIRED - update to your path)
 PROJECT_ROOT=/absolute/path/to/project/starter
+
+# GitHub Token (RECOMMENDED)
+# GITHUB_TOKEN=ghp_your-token-here
+
+# Logging level (optional)
+LOG_LEVEL=info
 ```
 
 ### Running
@@ -169,7 +180,7 @@ Your implementation is complete when:
 - [ ] Can review a real PR: `npm start owner repo pr-number`
 - [ ] Generates reports in at least one format (MD, HTML, JSON)
 - [ ] Rate limiting prevents API throttling (Optional)
-- [ ] Errors are handled gracefully (Optional Recommended)
+- [ ] Errors are handled gracefully (Recommended)
 
 ## Resources
 
@@ -178,6 +189,4 @@ Your implementation is complete when:
 - [Anthropic API Docs](https://docs.anthropic.com/)
 - [Zod Documentation](https://zod.dev/)
 
-
-
-Good luck! 
+Good luck!
