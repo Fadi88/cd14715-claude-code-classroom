@@ -74,7 +74,7 @@ Your workspace comes pre-configured with Anthropic API credentials.
 
 ```bash
 # Install dependencies from repository root (uses npm workspaces)
-cd /voc/work
+cd /voc/work/cd14715-claude-code-classroom
 npm install
 
 # Navigate to project and configure
@@ -108,7 +108,7 @@ Edit `.env` with your settings:
 ANTHROPIC_MODEL=claude-sonnet-4-5-20250929
 
 # Project root (REQUIRED)
-PROJECT_ROOT=/voc/work/project/starter
+PROJECT_ROOT=/voc/work/cd14715-claude-code-classroom/project/starter
 
 # GitHub Token (RECOMMENDED for higher rate limits)
 # GITHUB_TOKEN=ghp_your-token-here
