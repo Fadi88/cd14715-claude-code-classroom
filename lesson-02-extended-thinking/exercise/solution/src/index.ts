@@ -1,14 +1,13 @@
 /**
- * Demo: Extended Thinking for Root Cause Analysis
+ * Exercise: Extended Thinking for Fraud Detection
  *
- * Tests for the analyzeIncident() function.
+ * Tests for the analyzeFraudRisk() deliverable.
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { INCIDENTS } from "./sample-incidents.js";
-import { analyzeIncident } from "./incident-analyzer.js";
+import { TRANSACTIONS } from "./sample-transactions.js";
+import { analyzeFraudRisk } from "./fraud-analyzer.js";
 import { Model } from "@anthropic-ai/sdk/resources";
-
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -17,7 +16,6 @@ const client = new Anthropic({
 });
 
 const model = process.env.ANTHROPIC_MODEL;
-
 if (!model) {
   throw new Error("ANTHROPIC_MODEL is not set");
 }
@@ -27,7 +25,9 @@ if (!model) {
 // -----------------------------------------------------------------------------
 
 async function testWithoutThinking() {
-  console.log("\n--- Analysis WITHOUT Extended Thinking ---\n");
+  console.log("\n--- STEP 1: Analysis WITHOUT Extended Thinking ---\n");
+
+  const t = TRANSACTIONS.obvious_fraud;
 
   const response = await client.messages.create({
     model: model as Model,
@@ -35,41 +35,44 @@ async function testWithoutThinking() {
     messages: [
       {
         role: "user",
-        content: `Analyze this incident and identify the root cause:\n\n${INCIDENTS.checkout}`,
+        content: `Analyze this transaction for fraud: $${t.amount} at ${t.merchant} in ${t.location}. Customer usually spends $${t.customerHistory.typicalAmount} in ${t.customerHistory.typicalLocation}.`,
       },
     ],
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
-  console.log("Result:");
-  console.log(text);
+  console.log("Result:", text.substring(0, 300) + "...\n");
 
   console.log("⚠️  No audit trail captured - we only got the final answer!");
 }
 
 // -----------------------------------------------------------------------------
-// Step 2: Test analyzeIncident() WITH extended thinking
+// Step 2: Test analyzeFraudRisk() WITH extended thinking
 // -----------------------------------------------------------------------------
 
 async function testWithThinking() {
-  console.log("\n--- Analysis WITH Extended Thinking ---\n");
+  console.log("\n--- STEP 2: Analysis WITH Extended Thinking ---\n");
 
-  const result = await analyzeIncident(INCIDENTS.latency);
+  const t = TRANSACTIONS.ambiguous_case;
+  console.log(`Transaction: ${t.id} - $${t.amount} at ${t.merchant}\n`);
+
+  const result = await analyzeFraudRisk(t);
 
   console.log("📊 Analysis:");
   console.log(result.analysis);
 
-  console.log("------");
 
   console.log(`💭 Thinking steps captured: ${result.thinkingSteps.length}`);
 
   if (result.thinkingSteps.length > 0) {
     console.log("\n📋 First thinking step (preview):");
-    console.log(result.thinkingSteps[0]);
+    console.log(result.thinkingSteps[0].substring(0, 400) + "...");
   }
 
-  console.log("\n✅ Extended thinking provides audit trail for stakeholders!");
+  console.log("\n✅ Extended thinking provides audit trail for compliance!");
 }
+
+
 
 // -----------------------------------------------------------------------------
 // Main
@@ -77,7 +80,7 @@ async function testWithThinking() {
 
 async function main() {
   console.log("=".repeat(60));
-  console.log("  DEMO: Extended Thinking for Root Cause Analysis");
+  console.log("  EXERCISE: Extended Thinking for Fraud Detection");
   console.log("=".repeat(60));
 
   await testWithoutThinking();

@@ -23,6 +23,7 @@ export const MODELS = {
     name: "Opus 4.5",
     inputCostPer1k: 0.005,   // $5 per million tokens
     outputCostPer1k: 0.025,  // $25 per million tokens
+    effort: "high", // currently only haiku and sonnet have effort Beta feature only available to Opus model
   },
 };
 

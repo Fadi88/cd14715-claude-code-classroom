@@ -7,36 +7,27 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { Model } from "@anthropic-ai/sdk/resources";
-import AnthropicBedrock from "@anthropic-ai/bedrock-sdk";
+
 import dotenv from "dotenv";
 dotenv.config();
 
-// Initialize the Anthropic client -- if not using Bedrock
-const anthropicClient = new Anthropic({
+const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// Initialize the Anthropic client -- if using Bedrock
-const client = new AnthropicBedrock({
-  awsRegion: process.env.AWS_REGION,
-});
-
 const model = process.env.ANTHROPIC_MODEL;
+
 if (!model) {
   throw new Error("ANTHROPIC_MODEL is not set");
 }
 
 // -----------------------------------------------------------------------------
-// Exported Types
+// Exported Types - Simple text-based output
 // -----------------------------------------------------------------------------
 
 export interface IncidentAnalysis {
-  root_cause: string;
-  confidence: number;
-  reasoning_steps: string[];
-  contributing_factors: string[];
-  recommendation: string;
-  severity: "low" | "medium" | "high" | "critical";
+  analysis: string;          // The final text response
+  thinkingSteps: string[];   // Captured reasoning for audit trail
 }
 
 // -----------------------------------------------------------------------------
@@ -47,65 +38,49 @@ export async function analyzeIncident(incidentReport: string): Promise<IncidentA
   const response = await client.messages.create({
     model: model as Model,
     max_tokens: 16000,
+    // To turn on extended thinking, add a thinking object
     thinking: {
+      // with the type parameter set to enabled and 
       type: "enabled",
-      budget_tokens: 10000,
+      // the budget_tokens to a specified token budget for extended thinking.
+      // Larger budgets can improve response quality by enabling more thorough analysis for complex problems
+      // IMPORTANT: Thinking tokens are billable at the same rate as output tokens
+      // budget_tokens must be set to a value less than max_tokens
+      budget_tokens: parseInt(process.env.THINKING_BUDGET_TOKENS || "10000"),
     },
+
     messages: [
       {
         role: "user",
         content: `You are a senior SRE investigating a production incident.
 
-Analyze this incident and identify the root cause:
+                  Analyze this incident and identify the root cause:
 
-${incidentReport}
+                  ${incidentReport}
 
-Respond with JSON:
-{
-  "root_cause": "Primary cause of the incident",
-  "confidence": 0.0-1.0,
-  "contributing_factors": ["factor1", "factor2"],
-  "recommendation": "Immediate action to resolve",
-  "severity": "low|medium|high|critical"
-}`,
+                  Provide:
+                  1. Root cause identification
+                  2. Contributing factors
+                  3. Severity assessment (LOW/MEDIUM/HIGH/CRITICAL)
+                  4. Recommended immediate action`,
       },
     ],
   });
 
-  // Extract reasoning steps and final response
-  const reasoning_steps: string[] = [];
-  let finalResponse = "";
+  // Extract thinking steps and final response from content blocks
+  const thinkingSteps: string[] = [];
+  let analysis = "";
 
   for (const block of response.content) {
     if (block.type === "thinking") {
-      reasoning_steps.push(block.thinking);
+      thinkingSteps.push(block.thinking);
     } else if (block.type === "text") {
-      finalResponse = block.text;
+      analysis = block.text;
     }
   }
 
-  // Parse JSON result
-  try {
-    const jsonMatch = finalResponse.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON found");
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    return {
-      root_cause: parsed.root_cause || "Unknown",
-      confidence: parsed.confidence || 0.5,
-      reasoning_steps,
-      contributing_factors: parsed.contributing_factors || [],
-      recommendation: parsed.recommendation || "Investigate further",
-      severity: parsed.severity || "medium",
-    };
-  } catch {
-    return {
-      root_cause: "Analysis parsing failed",
-      confidence: 0,
-      reasoning_steps,
-      contributing_factors: [],
-      recommendation: "Manual review required",
-      severity: "medium",
-    };
-  }
+  return {
+    analysis,
+    thinkingSteps,
+  };
 }

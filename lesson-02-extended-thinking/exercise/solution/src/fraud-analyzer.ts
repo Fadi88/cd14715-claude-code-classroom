@@ -9,17 +9,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Transaction } from "./sample-transactions.js";
 import dotenv from "dotenv";
 import { Model } from "@anthropic-ai/sdk/resources";
-import AnthropicBedrock from "@anthropic-ai/bedrock-sdk";
 dotenv.config();
 
-// Initialize the Anthropic client -- if not using Bedrock
-const anthropicClient = new Anthropic({
+const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-// Initialize the Anthropic client -- if using Bedrock
-const client = new AnthropicBedrock({
-  awsRegion: process.env.AWS_REGION,
 });
 
 const model = process.env.ANTHROPIC_MODEL;
@@ -28,15 +21,13 @@ if (!model) {
 }
 
 // -----------------------------------------------------------------------------
-// Exported Types
+// Exported Types - FraudAnalysis interface
 // -----------------------------------------------------------------------------
 
 export interface FraudAnalysis {
-  risk_level: "low" | "medium" | "high" | "critical";
-  confidence: number;
-  reasoning_steps: string[];
-  risk_factors: string[];
-  recommendation: "approve" | "review" | "decline";
+  transactionId: string;
+  analysis: string;        // The final text response
+  thinkingSteps: string[]; // Captured reasoning for audit trail
 }
 
 // -----------------------------------------------------------------------------
@@ -47,9 +38,15 @@ export async function analyzeFraudRisk(transaction: Transaction): Promise<FraudA
   const response = await client.messages.create({
     model: model as Model,
     max_tokens: 16000,
+    // To turn on extended thinking, add a thinking object
     thinking: {
+      // with the type parameter set to enabled and 
       type: "enabled",
-      budget_tokens: 10000,
+      // the budget_tokens to a specified token budget for extended thinking.
+      // Larger budgets can improve response quality by enabling more thorough analysis for complex problems
+      // IMPORTANT: Thinking tokens are billable at the same rate as output tokens
+      // budget_tokens must be set to a value less than max_tokens
+      budget_tokens: parseInt(process.env.MAX_THINKING_TOKENS || '10000'),
     },
     messages: [
       {
@@ -67,56 +64,33 @@ export async function analyzeFraudRisk(transaction: Transaction): Promise<FraudA
                   - Account age: ${transaction.customerHistory.accountAgeDays} days
                   - Previous flags: ${transaction.customerHistory.previousFlags}
 
-                  Check for fraud patterns:
-                  1. Unusual location (different from typical)
-                  2. Amount anomalies (much higher than typical)
-                  3. High-risk merchant category
-                  4. Unusual time of day
-                  5. Account age and previous flags
+                  Analyze this transaction for fraud. Consider:
+                  1. Location anomalies
+                  2. Amount anomalies
+                  3. Merchant category risk
+                  4. Time of day patterns
+                  5. Account history
 
-                  Respond with JSON:
-                  {
-                    "risk_level": "low|medium|high|critical",
-                    "confidence": 0-100,
-                    "risk_factors": ["factor1", "factor2"],
-                    "recommendation": "approve|review|decline"
-                  }`,
+                  Provide your assessment with a risk level (LOW/MEDIUM/HIGH/CRITICAL) and recommendation (APPROVE/REVIEW/DECLINE).`,
       },
     ],
   });
 
-  // Extract reasoning steps and final response
-  const reasoning_steps: string[] = [];
-  let finalResponse = "";
+  // Extract thinking steps and final response from content blocks
+  const thinkingSteps: string[] = [];
+  let analysis = "";
 
   for (const block of response.content) {
     if (block.type === "thinking") {
-      reasoning_steps.push(block.thinking);
+      thinkingSteps.push(block.thinking);
     } else if (block.type === "text") {
-      finalResponse = block.text;
+      analysis = block.text;
     }
   }
 
-  // Parse JSON result
-  try {
-    const jsonMatch = finalResponse.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON found");
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    return {
-      risk_level: parsed.risk_level || "medium",
-      confidence: parsed.confidence || 50,
-      reasoning_steps,
-      risk_factors: parsed.risk_factors || [],
-      recommendation: parsed.recommendation || "review",
-    };
-  } catch {
-    return {
-      risk_level: "medium",
-      confidence: 0,
-      reasoning_steps,
-      risk_factors: ["Analysis parsing failed"],
-      recommendation: "review",
-    };
-  }
+  return {
+    transactionId: transaction.id,
+    analysis,
+    thinkingSteps,
+  };
 }
