@@ -47,25 +47,11 @@ Benefits:
 
 ### Option A: Single Agent
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Research Agent                         │
-│                                                          │
-│  Tools: WebSearch, WebFetch, Read, Analyze              │
-│                                                          │
-│  Responsibilities:                                       │
-│  - Search for company information                        │
-│  - Read and extract data from websites                   │
-│  - Find key people on LinkedIn                           │
-│  - Analyze and compile report                            │
-│                                                          │
-│  Workflow:                                               │
-│  1. Search company name                                  │
-│  2. Read company website                                 │
-│  3. Search for funding news                              │
-│  4. Find leadership team                                 │
-│  5. Compile comprehensive report                         │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    Agent["<b>Research Agent</b><br/><br/><b>Tools:</b> WebSearch, WebFetch, Read, Analyze<br/><br/><b>Responsibilities:</b><br/>- Search for company information<br/>- Read and extract data from websites<br/>- Find key people on LinkedIn<br/>- Analyze and compile report<br/><br/><b>Workflow:</b><br/>1. Search company name<br/>2. Read company website<br/>3. Search for funding news<br/>4. Find leadership team<br/>5. Compile comprehensive report"]
+
+    style Agent fill:#e1f5ff,stroke:#333,stroke-width:2px
 ```
 
 **Pros:**
@@ -82,32 +68,26 @@ Benefits:
 
 ### Option B: Multi-Agent (Recommended)
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Orchestrator                          │
-│         Coordinates research and compiles report         │
-└──────────────┬──────────────┬──────────────┬────────────┘
-               │              │              │
-       ┌───────▼───────┐ ┌────▼────┐ ┌──────▼───────┐
-       │ Web Researcher│ │ People  │ │   News       │
-       │    Agent      │ │ Finder  │ │  Analyst     │
-       ├───────────────┤ ├─────────┤ ├──────────────┤
-       │Tools:         │ │Tools:   │ │Tools:        │
-       │- WebSearch    │ │- Search │ │- WebSearch   │
-       │- WebFetch     │ │- WebFetch│ │- Read       │
-       ├───────────────┤ ├─────────┤ ├──────────────┤
-       │Finds:         │ │Finds:   │ │Finds:        │
-       │- Company info │ │- Execs  │ │- Funding     │
-       │- Tech stack   │ │- Titles │ │- Press       │
-       │- Products     │ │- LinkedIn│ │- Acquisitions│
-       └───────────────┘ └─────────┘ └──────────────┘
-               │              │              │
-               └──────────────┴──────────────┘
-                              │
-                    ┌─────────▼─────────┐
-                    │  Combined Report   │
-                    │   from all agents  │
-                    └───────────────────┘
+```mermaid
+graph TB
+    Orchestrator["<b>Orchestrator</b><br/>Coordinates research and compiles report"]
+    WebResearcher["<b>Web Researcher Agent</b><br/><br/><b>Tools:</b><br/>- WebSearch<br/>- WebFetch<br/><br/><b>Finds:</b><br/>- Company info<br/>- Tech stack<br/>- Products"]
+    PeopleFinder["<b>People Finder</b><br/><br/><b>Tools:</b><br/>- Search<br/>- WebFetch<br/><br/><b>Finds:</b><br/>- Execs<br/>- Titles<br/>- LinkedIn"]
+    NewsAnalyst["<b>News Analyst</b><br/><br/><b>Tools:</b><br/>- WebSearch<br/>- Read<br/><br/><b>Finds:</b><br/>- Funding<br/>- Press<br/>- Acquisitions"]
+    Report["<b>Combined Report</b><br/>from all agents"]
+
+    Orchestrator --> WebResearcher
+    Orchestrator --> PeopleFinder
+    Orchestrator --> NewsAnalyst
+    WebResearcher --> Report
+    PeopleFinder --> Report
+    NewsAnalyst --> Report
+
+    style Orchestrator fill:#fff4e6,stroke:#333,stroke-width:2px
+    style WebResearcher fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style PeopleFinder fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style NewsAnalyst fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style Report fill:#f3e5f5,stroke:#333,stroke-width:2px
 ```
 
 **Pros:**
@@ -136,50 +116,84 @@ Benefits:
 
 ### Workflow Diagram
 
+```mermaid
+flowchart TD
+    Start(["<b>START</b><br/>'Research Acme Corp'"])
+    Orchestrator1["<b>ORCHESTRATOR</b><br/>Parse request, spawn sub-agents"]
+    WebResearcher["<b>Web Researcher</b><br/>(PARALLEL)"]
+    PeopleFinder["<b>People Finder</b><br/>(PARALLEL)"]
+    NewsAnalyst["<b>News Analyst</b><br/>(PARALLEL)"]
+    CompanyProfile["<b>Company Profile</b>"]
+    LeadershipData["<b>Leadership Team Data</b>"]
+    NewsData["<b>Funding & News Data</b>"]
+    Orchestrator2["<b>ORCHESTRATOR</b><br/>Merge results, generate final report"]
+    FinalReport["<b>FINAL REPORT</b><br/>- Company Overview<br/>- Leadership Team<br/>- Funding History<br/>- Tech Stack<br/>- Recent News"]
+
+    Start --> Orchestrator1
+    Orchestrator1 --> WebResearcher
+    Orchestrator1 --> PeopleFinder
+    Orchestrator1 --> NewsAnalyst
+    WebResearcher --> CompanyProfile
+    PeopleFinder --> LeadershipData
+    NewsAnalyst --> NewsData
+    CompanyProfile --> Orchestrator2
+    LeadershipData --> Orchestrator2
+    NewsData --> Orchestrator2
+    Orchestrator2 --> FinalReport
+
+    style Start fill:#e3f2fd,stroke:#333,stroke-width:2px
+    style Orchestrator1 fill:#fff4e6,stroke:#333,stroke-width:2px
+    style WebResearcher fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style PeopleFinder fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style NewsAnalyst fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style CompanyProfile fill:#f3e5f5,stroke:#333,stroke-width:2px
+    style LeadershipData fill:#f3e5f5,stroke:#333,stroke-width:2px
+    style NewsData fill:#f3e5f5,stroke:#333,stroke-width:2px
+    style Orchestrator2 fill:#fff4e6,stroke:#333,stroke-width:2px
+    style FinalReport fill:#c8e6c9,stroke:#333,stroke-width:3px
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         START                                │
-│                     "Research Acme Corp"                     │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
-┌──────────────────────────────────────────────────────────────┐
-│                      ORCHESTRATOR                             │
-│              Parse request, spawn sub-agents                  │
-└──────────────────────────┬───────────────────────────────────┘
-                           │
-           ┌───────────────┼───────────────┐
-           │               │               │
-           ▼               ▼               ▼
-    ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-    │    Web      │ │   People    │ │    News     │
-    │ Researcher  │ │   Finder    │ │   Analyst   │
-    │  (PARALLEL) │ │  (PARALLEL) │ │  (PARALLEL) │
-    └──────┬──────┘ └──────┬──────┘ └──────┬──────┘
-           │               │               │
-           ▼               ▼               ▼
-    ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-    │ Company     │ │ Leadership  │ │ Funding &   │
-    │ Profile     │ │ Team Data   │ │ News Data   │
-    └──────┬──────┘ └──────┬──────┘ └──────┬──────┘
-           │               │               │
-           └───────────────┼───────────────┘
-                           │
-                           ▼
-┌──────────────────────────────────────────────────────────────┐
-│                      ORCHESTRATOR                             │
-│           Merge results, generate final report                │
-└──────────────────────────┬───────────────────────────────────┘
-                           │
-                           ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    FINAL REPORT                               │
-│  - Company Overview                                           │
-│  - Leadership Team                                            │
-│  - Funding History                                            │
-│  - Tech Stack                                                 │
-│  - Recent News                                                │
-└──────────────────────────────────────────────────────────────┘
+
+### Sequence Diagram
+
+The following sequence diagram shows the interaction timeline between components:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Orch as Orchestrator
+    participant Web as Web Researcher
+    participant People as People Finder
+    participant News as News Analyst
+
+    User->>Orch: Research "Acme Corp"
+    activate Orch
+
+    Note over Orch: Parse request and<br/>spawn agents in parallel
+
+    par Parallel Execution
+        Orch->>Web: research(companyName)
+        activate Web
+        and
+        Orch->>People: findLeadership(companyName)
+        activate People
+        and
+        Orch->>News: analyzeNews(companyName)
+        activate News
+    end
+
+    Note over Web,News: Agents work independently
+
+    Web-->>Orch: Company Profile Data
+    deactivate Web
+    People-->>Orch: Leadership Team Data
+    deactivate People
+    News-->>Orch: Funding & News Data
+    deactivate News
+
+    Note over Orch: Merge results and<br/>compile final report
+
+    Orch-->>User: Comprehensive Report
+    deactivate Orch
 ```
 
 ---
