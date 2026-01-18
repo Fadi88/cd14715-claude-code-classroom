@@ -3,6 +3,10 @@
  *
  * Deliverable: A custom tool that validates API responses, measures latency,
  * and checks for SLA compliance.
+ *
+ * ARCHITECTURE NOTE: The validateApiResponse function is exported separately
+ * from the tool handler so it can be unit tested independently of the agent.
+ * This is a best practice for tool development.
  */
 
 import { z } from "zod";
@@ -41,10 +45,14 @@ const validateApiSchema = {
 };
 
 // -----------------------------------------------------------------------------
-// Validation Logic
+// Validation Logic (exported for unit testing)
 // -----------------------------------------------------------------------------
 
-async function validateApiResponse(
+/**
+ * Validates an API response for schema compliance, performance, and SLA adherence.
+ * This function is exported so it can be unit tested independently of the agent.
+ */
+export async function validateApiResponse(
   apiUrl: URL,
   method: string,
   expectedFields: string[],

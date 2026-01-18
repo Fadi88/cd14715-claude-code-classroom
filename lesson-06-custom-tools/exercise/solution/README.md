@@ -10,8 +10,9 @@ Your engineering team needs to validate that API responses match expected schema
 
 ```
 src/
-├── api-validator.ts  # Exported tool (deliverable)
-└── index.ts          # Test with agent
+├── api-validator.ts       # Exported tool (deliverable)
+├── api-validator.test.ts  # Unit tests (no API calls)
+└── index.ts               # Agent integration tests
 ```
 
 ## Setup
@@ -23,30 +24,13 @@ npm install
 
 ## Authentication Setup
 
-Choose **one** authentication method:
-
-### Option 1: AWS Bedrock (Recommended for Vocareum)
-
 Create `.env`:
-```
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key-id
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
-AWS_SESSION_TOKEN=your-session-token
-CLAUDE_CODE_USE_BEDROCK=1
-ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
-```
 
-Copy AWS credentials from your Vocareum workspace.
-
-### Option 2: Direct Anthropic API
-
-Create `.env`:
+Add your Anthropic API key if working locally to .env:
 ```
 ANTHROPIC_API_KEY=your-key-here
 ```
-
-Get your API key from https://console.anthropic.com
+IMPORTANT: This is already set up in Vocareum workspace
 
 ## Run
 
@@ -111,7 +95,28 @@ for await (const message of query({
 })) { ... }
 ```
 
+## Unit Testing (Best Practice)
+
+Always unit test your tool's business logic separately from agent integration:
+
+```bash
+# Run unit tests (no API calls, fast)
+npm run test:unit
+
+# Run agent integration tests (requires API key)
+npm run test
+```
+
+The `validateApiResponse` function is exported separately so it can be tested without running the agent. See `api-validator.test.ts` for comprehensive unit tests covering:
+- Successful responses with all expected fields
+- Missing fields (breaking changes)
+- Extra fields (warnings)
+- HTTP errors (404, 500)
+- SLA violations
+- Network errors
+- Invalid JSON responses
+
 ## Key Takeaway
 
-Custom tools extend agent capabilities with domain-specific logic. Use `createSdkMcpServer` and `tool()` helper to create MCP-compatible tools that agents can use.
+Custom tools extend agent capabilities with domain-specific logic. Use `createSdkMcpServer` and `tool()` helper to create MCP-compatible tools that agents can use. **Extract business logic into testable functions** for fast, API-free testing during development.
 

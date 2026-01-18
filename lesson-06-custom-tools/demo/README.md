@@ -1,17 +1,22 @@
-# Demo: Custom Tools - Tax Calculator
+# Demo: Custom Tools - Multiple Tools with External API Integration
 
 Build custom tools for agents using the Claude Agent SDK.
 
 ## Scenario
 
-A financial application needs agents to calculate tax amounts with proper decimal precision. We'll build a custom "calculate_tax" tool using `createSdkMcpServer`.
+An application needs agents to:
+1. Calculate tax amounts and tips with proper decimal precision
+2. Fetch real-time weather data from external APIs
+
+We'll build multiple custom tools (`calculate_tax`, `calculate_tip`, and `get_weather`) in a single MCP server using `createSdkMcpServer`, demonstrating both local calculations and external API integration.
 
 ## Project Structure
 
 ```
 src/
-├── tax-calculator.ts  # Exported tool (deliverable)
-└── index.ts           # Tests for the tool
+├── tax-calculator.ts       # Exported tool (deliverable)
+├── tax-calculator.test.ts  # Unit tests (no API calls)
+└── index.ts                # Agent integration tests
 ```
 
 ## Setup
@@ -23,30 +28,13 @@ npm install
 
 ## Authentication Setup
 
-Choose **one** authentication method:
-
-### Option 1: AWS Bedrock (Recommended for Vocareum)
-
 Create `.env`:
-```
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key-id
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
-AWS_SESSION_TOKEN=your-session-token
-CLAUDE_CODE_USE_BEDROCK=1
-ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
-```
 
-Copy AWS credentials from your Vocareum workspace.
-
-### Option 2: Direct Anthropic API
-
-Create `.env`:
+Add your Anthropic API key if working locally to .env:
 ```
 ANTHROPIC_API_KEY=your-key-here
 ```
-
-Get your API key from https://console.anthropic.com
+IMPORTANT: This is already set up in Vocareum workspace
 
 ## Run
 
@@ -65,11 +53,31 @@ export interface TaxResult {
   currency: string;
 }
 
+export interface TipResult {
+  subtotal: number;
+  tipAmount: number;
+  total: number;
+  tipPercentage: number;
+  currency: string;
+}
+
+export interface WeatherResult {
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  temperature: number;
+  temperatureUnit: string;
+  time: string;
+}
+
+// MCP Server with MULTIPLE tools (local calculations + external API)
 export const taxToolServer: SdkMcpServer;
-export function calculateTax(amount, taxRate, round): TaxResult;
 ```
 
 ## Custom Tool Pattern
+
+### Single Tool Server
 
 ```typescript
 import { z } from "zod";
@@ -91,11 +99,140 @@ const myToolServer = createSdkMcpServer({
 });
 ```
 
-## Using Custom Tools
+### Multiple Tools in One Server
 
 ```typescript
+const multiToolServer = createSdkMcpServer({
+  name: "utilities",
+  version: "1.0.0",
+  tools: [
+    tool(
+      "calculate",
+      "Perform calculations",
+      { expression: z.string() },
+      async (args) => { /* ... */ }
+    ),
+    tool(
+      "translate",
+      "Translate text",
+      { text: z.string(), target_lang: z.string() },
+      async (args) => { /* ... */ }
+    ),
+    tool(
+      "search_web",
+      "Search the web",
+      { query: z.string() },
+      async (args) => { /* ... */ }
+    ),
+  ],
+});
+```
+
+### External API Integration
+
+Tools can call external APIs to fetch real-time data:
+
+```typescript
+tool(
+  "get_weather",
+  "Get current temperature for a location using coordinates",
+  {
+    latitude: z.number().min(-90).max(90).describe("Latitude coordinate"),
+    longitude: z.number().min(-180).max(180).describe("Longitude coordinate")
+  },
+  async (args) => {
+    try {
+      // Call external API
+      const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${args.latitude}&longitude=${args.longitude}&current=temperature_2m&temperature_unit=fahrenheit`;
+
+      const response = await fetch(apiUrl);
+
+      // Handle HTTP errors
+      if (!response.ok) {
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: true,
+              message: `API error: ${response.status} ${response.statusText}`
+            }, null, 2)
+          }]
+        };
+      }
+
+      // Parse and validate response
+      const data = await response.json();
+
+      if (!data.current || typeof data.current.temperature_2m !== "number") {
+        throw new Error("Invalid API response structure");
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            temperature: data.current.temperature_2m,
+            temperatureUnit: "°F",
+            location: { latitude: args.latitude, longitude: args.longitude }
+          }, null, 2)
+        }]
+      };
+    } catch (error) {
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              error: true,
+              type: "network",
+              message: "Unable to connect to weather API"
+            }, null, 2)
+          }]
+        };
+      }
+
+      // Handle other errors
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({ error: true, message: errorMessage }, null, 2)
+        }]
+      };
+    }
+  }
+)
+```
+
+**Key Patterns:**
+- Use `fetch()` for HTTP requests
+- Check `response.ok` for HTTP status codes
+- Validate API response structure before using
+- Handle network errors (TypeError with "fetch")
+- Return structured error messages for debugging
+- Use try-catch for comprehensive error handling
+
+## Using Custom Tools
+
+**CRITICAL**: Custom MCP tools require streaming input mode. You MUST use an async generator for the `prompt` parameter - a simple string will not work.
+
+```typescript
+// Create async generator for streaming input
+async function* generateMessages() {
+  yield {
+    type: "user" as const,
+    message: {
+      role: "user" as const,
+      content: "Your prompt here"
+    },
+    parent_tool_use_id: null,  // Required: null for normal messages
+    session_id: "demo-session"  // Required: unique session identifier
+  };
+}
+
 for await (const message of query({
-  prompt: generateMessages(),  // Must use async generator
+  prompt: generateMessages(),  // ✅ Must use async generator
   options: {
     mcpServers: { "my-tools": myToolServer },
     allowedTools: ["mcp__my-tools__tool_name"],
@@ -105,15 +242,114 @@ for await (const message of query({
 }
 ```
 
-## Tests (index.ts)
+### Using Multiple Tools with Selective Allowance
 
-| Step | Description |
-|------|-------------|
-| 1 | Test tool directly (without agent) |
-| 2 | Use tool with agent via MCP server |
-| 3 | Demonstrate precision handling |
+When your server has multiple tools, you can control which tools the agent can use:
 
-## Key Takeaway
+```typescript
+for await (const message of query({
+  prompt: generateMessages(),
+  options: {
+    mcpServers: { "utilities": multiToolServer },
+    // Allow only specific tools - agent CANNOT use search_web
+    allowedTools: [
+      "mcp__utilities__calculate",   // ✅ Allowed
+      "mcp__utilities__translate",   // ✅ Allowed
+      // "mcp__utilities__search_web" is NOT in the list, so NOT allowed
+    ]
+  },
+})) {
+  // Handle response - agent will choose between calculate and translate
+}
+```
 
-Custom tools extend agent capabilities. Use `createSdkMcpServer` and `tool()` helper with Zod schemas. Tool names follow `mcp__<server>__<tool>` pattern.
+**Key Points:**
+- Tool names follow pattern: `mcp__<server_name>__<tool_name>`
+- Agent automatically chooses the most appropriate tool from allowed list
+- Omitting a tool from `allowedTools` prevents the agent from using it
+- This is useful for security, cost control, or context-specific limitations
+
+## Unit Testing Tools (IMPORTANT)
+
+**Best Practice**: Always unit test your tool's business logic separately from agent integration. This allows:
+- Fast iteration during development (no API calls)
+- No API costs for testing logic
+- Easy debugging of edge cases
+- CI/CD pipeline integration
+
+### Architecture for Testability
+
+Extract business logic into separate exported functions that tool handlers call:
+
+```typescript
+// ❌ Hard to test - logic embedded in tool handler
+tool("calculate_tax", "...", schema, async (args) => {
+  // All logic here - can only test via agent
+});
+
+// ✅ Easy to test - logic in separate function
+export function calculateTax(amount: number, rate: number): TaxResult | ErrorResult {
+  // Business logic here - can unit test directly
+}
+
+tool("calculate_tax", "...", schema, async (args) => {
+  const result = calculateTax(args.amount, args.rate);
+  return { content: [{ type: "text", text: JSON.stringify(result) }] };
+});
+```
+
+### Running Unit Tests
+
+```bash
+# Run unit tests (no API calls, fast)
+npm run test:unit
+
+# Run agent integration tests (requires API key)
+npm run test
+```
+
+### Example Unit Test
+
+```typescript
+import { calculateTax, isError, TaxResult } from "./tax-calculator.js";
+
+// Test business logic directly - no agent needed
+test("calculates 8% tax on $100 correctly", () => {
+  const result = calculateTax(100, 0.08);
+  assertFalse(isError(result));
+  const taxResult = result as TaxResult;
+  assertEqual(taxResult.tax, 8);
+  assertEqual(taxResult.total, 108);
+});
+
+// Test error handling
+test("returns error for negative amount", () => {
+  const result = calculateTax(-100, 0.08);
+  assertTrue(isError(result));
+  assertTrue(result.message.includes("greater than zero"));
+});
+```
+
+See `tax-calculator.test.ts` for comprehensive examples.
+
+## Agent Integration Tests (index.ts)
+
+| Test | Description | Demonstrates |
+|------|-------------|--------------|
+| 1 | Single Tool Usage | Using one tool (calculate_tax) from the server |
+| 2 | Multiple Tools | Agent chooses between calculate_tax and calculate_tip based on the task |
+| 3 | External API Integration | Fetching real-time weather data from Open-Meteo API with error handling |
+
+## Key Takeaways
+
+1. **Multiple Tools**: Create servers with multiple related tools using the `tools` array
+2. **Tool Naming**: Tools are exposed as `mcp__<server_name>__<tool_name>` (e.g., `mcp__financial-tools__calculate_tax`)
+3. **Selective Allowance**: Use `allowedTools` to control which tools the agent can access
+4. **Agent Choice**: When multiple tools are allowed, the agent automatically chooses the most appropriate one
+5. **Type Safety**: Zod schemas provide runtime validation and TypeScript type inference
+6. **Streaming Input**: Custom MCP tools REQUIRE async generators for the `prompt` parameter
+7. **External API Integration**: Tools can call external APIs using `fetch()` with proper error handling
+8. **Error Handling**: Handle HTTP errors, network failures, and response validation separately
+9. **Real-world Patterns**: Mix local computation tools (tax, tip) with external data tools (weather)
+10. **Unit Testing**: Extract business logic into testable functions for fast, API-free testing during development
 

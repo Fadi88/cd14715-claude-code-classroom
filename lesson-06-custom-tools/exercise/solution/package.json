@@ -5,7 +5,8 @@
   "main": "src/api-validator-tool.ts",
   "scripts": {
     "start": "npx tsx src/index.ts",
-    "test": "npx tsx src/index.ts"
+    "test": "npx tsx src/index.ts",
+    "test:unit": "npx tsx src/api-validator.test.ts"
   },
   "keywords": [
     "claude",

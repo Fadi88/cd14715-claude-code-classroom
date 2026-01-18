@@ -1,24 +1,27 @@
 /**
- * Demo: Custom Tools - Tax Calculator
+ * Exercise: Custom Tools - API Validator
  *
- * Tests for the tax calculator custom tool.
+ * Tests for the API validator custom tool.
+ * This file is COMPLETE - you implement api-validator.ts
  */
 
 import "dotenv/config";
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { taxToolServer } from "./tax-calculator.js";
+import { apiValidatorServer } from "./api-validator.js";
 
 const model = process.env.ANTHROPIC_MODEL;
-
 if (!model) {
   throw new Error("ANTHROPIC_MODEL is not set");
 }
 
 // -----------------------------------------------------------------------------
-//  Test 1: Single Tool Usage
+// Test 1: Basic API Validation
 // -----------------------------------------------------------------------------
 
-async function testSingleTool() {
+async function testBasicValidation() {
+  console.log("\nTEST 1: Basic API Validation");
+  console.log("-".repeat(50));
+
   // IMPORTANT: Custom MCP tools require streaming input mode
   // Must use async generator, not a simple string
   async function* generateMessages() {
@@ -26,10 +29,11 @@ async function testSingleTool() {
       type: "user" as const,
       message: {
         role: "user" as const,
-        content: "Calculate the tax on a $150 purchase with 8.5% sales tax rate."
+        content:
+          "Validate the JSONPlaceholder users API at https://jsonplaceholder.typicode.com/users/1. Check for fields: id, name, email, phone. SLA threshold: 500ms.",
       },
       parent_tool_use_id: null,
-      session_id: "demo-session"
+      session_id: "exercise-session-1",
     };
   }
 
@@ -37,48 +41,47 @@ async function testSingleTool() {
     prompt: generateMessages(),
     options: {
       mcpServers: {
-        "financial-tools": taxToolServer,
+        "api-validator": apiValidatorServer,
       },
       model,
-      allowedTools: ["mcp__financial-tools__calculate_tax"]
+      allowedTools: ["mcp__api-validator__validate_api_response"],
     },
   })) {
-    if (message.type === 'assistant') {
-      // Check for tool use
+    if (message.type === "assistant") {
       const content = message.message?.content;
       if (Array.isArray(content)) {
         for (const block of content) {
-          if (block.type === 'tool_use') {
-            console.log(`[Tool]: ${JSON.stringify(block)}`);
+          if (block.type === "tool_use") {
+            console.log(`[Tool Used]: ${block.name}`);
           }
         }
       }
-    }
-    else if (message.type === "result" && message.subtype === "success") {
-      console.log("Agent Result:\n");
+    } else if (message.type === "result" && message.subtype === "success") {
+      console.log("\nAgent Result:");
       console.log(message.result);
     }
   }
 }
 
 // -----------------------------------------------------------------------------
-//  Test 2: Multiple Tools - Agent Chooses Between Them
+// Test 2: SLA Violation Detection
 // -----------------------------------------------------------------------------
 
-async function testMultipleTools() {
+async function testSLAViolation() {
   console.log("\n" + "=".repeat(60));
-  console.log("TEST 2: Multiple Tools - Agent Chooses Appropriate Tool");
-  console.log("=".repeat(60) + "\n");
+  console.log("TEST 2: SLA Violation Detection (tight threshold)");
+  console.log("=".repeat(60));
 
   async function* generateMessages() {
     yield {
       type: "user" as const,
       message: {
         role: "user" as const,
-        content: "I have a $75 dinner bill. Calculate both the 8% sales tax and a 20% tip for me."
+        content:
+          "Validate https://jsonplaceholder.typicode.com/posts with a very tight SLA of 10ms. Check for fields: userId, id, title, body. Report if the SLA is violated.",
       },
       parent_tool_use_id: null,
-      session_id: "demo-session-multi"
+      session_id: "exercise-session-2",
     };
   }
 
@@ -86,51 +89,47 @@ async function testMultipleTools() {
     prompt: generateMessages(),
     options: {
       mcpServers: {
-        "financial-tools": taxToolServer,
+        "api-validator": apiValidatorServer,
       },
       model,
-      // Allow both tools - agent will choose which to use
-      allowedTools: [
-        "mcp__financial-tools__calculate_tax",
-        "mcp__financial-tools__calculate_tip"
-      ]
+      allowedTools: ["mcp__api-validator__validate_api_response"],
     },
   })) {
-    if (message.type === 'assistant') {
+    if (message.type === "assistant") {
       const content = message.message?.content;
       if (Array.isArray(content)) {
         for (const block of content) {
-          if (block.type === 'tool_use') {
+          if (block.type === "tool_use") {
             console.log(`[Tool Used]: ${block.name}`);
           }
         }
       }
-    }
-    else if (message.type === "result" && message.subtype === "success") {
-      console.log("Agent Result:\n");
+    } else if (message.type === "result" && message.subtype === "success") {
+      console.log("\nAgent Result:");
       console.log(message.result);
     }
   }
 }
 
 // -----------------------------------------------------------------------------
-//  Test 3: External API Integration - Weather API
+// Test 3: Missing Fields Detection (Breaking Changes)
 // -----------------------------------------------------------------------------
 
-async function testExternalAPI() {
+async function testMissingFields() {
   console.log("\n" + "=".repeat(60));
-  console.log("TEST 3: External API Integration - Weather Data");
-  console.log("=".repeat(60) + "\n");
+  console.log("TEST 3: Missing Fields Detection (Breaking Changes)");
+  console.log("=".repeat(60));
 
   async function* generateMessages() {
     yield {
       type: "user" as const,
       message: {
         role: "user" as const,
-        content: "What's the current temperature in San Francisco? Use coordinates 37.7749, -122.4194"
+        content:
+          "Validate https://jsonplaceholder.typicode.com/users/1 and check for these fields: id, name, email, nonExistentField, anotherMissingField. SLA: 500ms. Report any breaking changes.",
       },
       parent_tool_use_id: null,
-      session_id: "demo-session-weather"
+      session_id: "exercise-session-3",
     };
   }
 
@@ -138,28 +137,23 @@ async function testExternalAPI() {
     prompt: generateMessages(),
     options: {
       mcpServers: {
-        "financial-tools": taxToolServer,
+        "api-validator": apiValidatorServer,
       },
       model,
-      // Allow only the weather tool to demonstrate external API integration
-      allowedTools: [
-        "mcp__financial-tools__get_weather"
-      ]
+      allowedTools: ["mcp__api-validator__validate_api_response"],
     },
   })) {
-    if (message.type === 'assistant') {
+    if (message.type === "assistant") {
       const content = message.message?.content;
       if (Array.isArray(content)) {
         for (const block of content) {
-          if (block.type === 'tool_use') {
+          if (block.type === "tool_use") {
             console.log(`[Tool Used]: ${block.name}`);
-            console.log(`[API Call]: Fetching from Open-Meteo API...`);
           }
         }
       }
-    }
-    else if (message.type === "result" && message.subtype === "success") {
-      console.log("Agent Result:\n");
+    } else if (message.type === "result" && message.subtype === "success") {
+      console.log("\nAgent Result:");
       console.log(message.result);
     }
   }
@@ -171,20 +165,18 @@ async function testExternalAPI() {
 
 async function main() {
   console.log("=".repeat(60));
-  console.log("  DEMO: Custom Tools - Multiple Tools in One Server");
+  console.log("  EXERCISE: Custom Tools - API Validator");
   console.log("  Using createSdkMcpServer and tool() helper");
   console.log("=".repeat(60));
 
-  // Test 1: Single tool usage
-  console.log("\nTEST 1: Single Tool Usage - Tax Calculator");
-  console.log("=".repeat(60) + "\n");
-  await testSingleTool();
+  // Test 1: Basic validation
+  await testBasicValidation();
 
-  // Test 2: Agent chooses between multiple tools
-  await testMultipleTools();
+  // Test 2: SLA violation (tight threshold)
+  await testSLAViolation();
 
-  // Test 3: External API integration
-  await testExternalAPI();
+  // Test 3: Missing fields detection
+  await testMissingFields();
 
   console.log("\n" + "=".repeat(60));
   console.log("All tests completed!");
