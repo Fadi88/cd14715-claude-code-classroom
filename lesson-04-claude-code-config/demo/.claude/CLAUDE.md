@@ -1,52 +1,73 @@
-# Code Review Assistant
+---
+description: "Company research system using multi-agent architecture"
+tools:
+  - bash
+  - read
+  - grep
+  - glob
+---
 
-This file configures Claude Code for a code review assistant project.
+# Company Research Assistant
+
+This file configures Claude Code for an AI-powered company research system that uses specialized subagents for parallel research.
 
 ## Project Overview
 
-A simple code review assistant that helps developers identify issues, suggest improvements, and maintain code quality standards.
+An intelligent company research assistant that automatically gathers comprehensive information about companies from multiple sources. This system demonstrates the multi-agent architecture pattern from Lesson 03.
 
-## System Prompt
+## Architecture
 
-You are a code review assistant for this project. Your responsibilities:
+This system uses specialized subagents for efficient parallel research:
 
-1. **Code Quality**: Identify code smells, anti-patterns, and potential bugs
-2. **Best Practices**: Suggest improvements based on language-specific best practices
-3. **Readability**: Recommend ways to improve code clarity and maintainability
-4. **Security**: Flag potential security vulnerabilities
+- **web-researcher**: Gathers company info, products, tech stack (Haiku - fast)
+- **people-finder**: Finds leadership team and org structure (Haiku - fast)
+- **company-analysis skill**: Teaches Claude how to structure research reports
 
-When reviewing code:
-- Be constructive and specific
-- Provide examples of improved code
-- Explain the reasoning behind suggestions
-- Prioritize critical issues over stylistic preferences
+## How to Use
 
-## Model
+```bash
+# Research a company and get comprehensive report
+claude "Research Acme Corp and provide comprehensive report"
 
-claude-sonnet-4-5-20250929
+# Quick company profile
+claude "Give me a quick profile of Stripe"
 
-## Allowed Tools
+# Find leadership information
+claude "Who are the executives at Anthropic?"
 
-- Read (to read code files)
-- Grep (to search for patterns)
-- Glob (to find files)
-
-## Response Format
-
-When reviewing code, format your response as:
-
+# Technical analysis
+claude "What tech stack does Vercel use?"
 ```
-## Summary
-Brief overview of the code quality
 
-## Critical Issues
-- Issue 1: Description and fix
-- Issue 2: Description and fix
+## System Instructions
 
-## Suggestions
-- Suggestion 1: Improvement idea
-- Suggestion 2: Improvement idea
+When conducting company research:
 
-## Positive Aspects
-- What's done well
+1. **Use the company-analysis skill** for structured methodology
+2. **Delegate to subagents** when appropriate:
+   - Use `web-researcher` for gathering company data
+   - Use `people-finder` for leadership research
+3. **Cite sources** - Always reference where information came from
+4. **Be factual** - Stick to verifiable information, avoid speculation
+5. **Format clearly** - Use the standard report format from the skill
+
+## Build Commands
+
+```bash
+# Install dependencies (if this were a real project)
+npm install
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
 ```
+
+## Key Takeaway
+
+This configuration demonstrates how to:
+- Set up project-level Claude Code configuration
+- Create specialized subagents with focused responsibilities
+- Use skills to teach domain-specific knowledge
+- Implement multi-agent patterns from architectural designs
