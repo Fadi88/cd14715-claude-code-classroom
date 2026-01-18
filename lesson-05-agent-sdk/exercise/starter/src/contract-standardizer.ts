@@ -91,23 +91,16 @@ export async function standardizeContract(
 ): Promise<StandardizedContract> {
   const outputPath = path.join(STANDARDIZED_FOLDER, outputFilename);
 
-  const result = query({
-    prompt: contractStandardizerPrompt(inputPath, outputPath),
-    options: { model, allowedTools: ["Read", "Write"] },
-  });
 
-  let rawResult = "";
+  //TODO implement the function
 
-  for await (const message of result) {
-    if (message.type === "result" && message.subtype === "success") {
-      rawResult = message.result;
-      break;
-    }
-  }
 
   return {
     inputPath,
     outputPath,
-    raw: rawResult,
+    raw: '' // TODO return raw result
   };
+
+
+  //TODO: Catch any errors and re-throw with message: "Failed to standardize contract: {original message}"
 }

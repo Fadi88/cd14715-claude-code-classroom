@@ -11,7 +11,7 @@ import { summarizeDocument } from "./document-summarizer.js";
 // Step 1: Test with sample API guide
 // -----------------------------------------------------------------------------
 
-async function step1_summarizeSampleDoc() {
+async function summarizeSampleDoc() {
   console.log("\n--- STEP 1: Summarize Sample API Guide ---\n");
 
   const filePath = "./src/sample-api-guide.md";
@@ -38,7 +38,7 @@ async function main() {
   console.log("  Testing: summarizeDocument() function");
   console.log("=".repeat(60));
 
-  await step1_summarizeSampleDoc();
+  await summarizeSampleDoc();
 }
 
 main().catch(console.error);
