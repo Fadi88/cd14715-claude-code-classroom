@@ -69,22 +69,32 @@ Extract:
 - summary: A brief 1-2 sentence summary
 - recommendsPurchase: Would the reviewer recommend buying?`;
 
-  for await (const message of query({
-    prompt,
-    options: {
-      model,
-      // use JSON Schema for structured output
-      outputFormat: {
-        type: "json_schema",
-        schema: ProductReviewJSONSchema,
-      },
-    },
-  })) {
-    if (message.type === "result" && message.subtype === "success" && message.structured_output) {
-      // Validate with Zod for type safety
-      return ProductReviewSchema.parse(message.structured_output);
-    }
-  }
 
-  throw new Error("Failed to get structured output from agent");
+  try {
+    for await (const message of query({
+      prompt,
+      options: {
+        model,
+        // use JSON Schema for structured output
+        outputFormat: {
+          type: "json_schema",
+          schema: ProductReviewJSONSchema,
+        },
+      },
+    })) {
+
+      if (message.type === 'result') {
+        if (message.subtype === 'success' && message.structured_output) {
+          // Use the validated output
+          console.log(message.structured_output)
+          return ProductReviewSchema.parse(message.structured_output);
+        } else if (message.subtype === 'error_max_structured_output_retries') {
+          // Handle the failure - retry with simpler prompt, fall back to unstructured, etc.
+          console.error('Could not produce valid output')
+        }
+      }
+    }
+  } catch (error) {
+    throw new Error("Failed to get structured output from agent");
+  }
 }
