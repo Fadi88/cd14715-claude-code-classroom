@@ -1,13 +1,10 @@
 /**
- * Email Etiquette Reviewer Agent
+ * JavaScript Code Reviewer Agent
  *
- * Deliverable: reviewEmail() function using Claude Agent SDK
- * with multiple skills loaded from .claude/skills/
+ * Deliverable: reviewJavaScriptFile() function using Claude Agent SDK
+ * with the js-code-review skill loaded from .claude/skills/
  *
- * Demonstrates:
- * - Multiple skills (email-etiquette, communication-style)
- * - Skill discovery by Claude based on descriptions
- * - Combining Skills (L08) with Structured Outputs (L07)
+ * Combines Skills (L08) with Structured Outputs (L07) for type-safe results.
  */
 
 import "dotenv/config";
@@ -31,37 +28,32 @@ const PROJECT_ROOT = path.resolve(__dirname, "..");
 // Zod Schema for Structured Output
 // -----------------------------------------------------------------------------
 
-const EmailIssueSchema = z.object({
-  category: z
-    .enum(["tone", "structure", "clarity", "grammar", "professionalism"])
-    .describe("Category of the issue"),
+const CodeIssueSchema = z.object({
+  line: z.number().describe("Line number where the issue was found"),
   severity: z
-    .enum(["high", "medium", "low"])
+    .enum(["error", "warning", "info"])
     .describe("Severity level of the issue"),
-  description: z.string().describe("Description of the issue"),
-  suggestion: z.string().describe("Suggested improvement"),
+  category: z
+    .enum(["quality", "bug", "security", "performance", "style"])
+    .describe("Category of the issue"),
+  message: z.string().describe("Description of the issue"),
+  suggestion: z.string().describe("Suggested fix or improvement"),
 });
 
-const EmailReviewResultSchema = z.object({
-  overallTone: z
-    .enum(["too-casual", "too-formal", "appropriate", "mixed"])
-    .describe("Overall tone assessment"),
-  communicationStyle: z
-    .enum(["assertive", "passive", "aggressive", "passive-aggressive"])
-    .describe("Communication style (assertive, passive, aggressive, passive-aggressive)"),
+const CodeReviewResultSchema = z.object({
+  filename: z.string().describe("Name of the reviewed file"),
+  summary: z.string().describe("Brief summary of the code review"),
+  issues: z.array(CodeIssueSchema).describe("List of issues found"),
   score: z
     .number()
-    .describe("Email quality score from 0-100"),
-  issues: z.array(EmailIssueSchema).describe("List of issues found"),
-  strengths: z.array(z.string()).describe("Positive aspects of the email"),
-  revisedEmail: z
-    .string()
-    .optional()
-    .describe("Suggested revised version of the email"),
+    .describe("Overall code quality score from 0-100"),
+  recommendations: z
+    .array(z.string())
+    .describe("General recommendations for improvement"),
 });
 
-export type EmailIssue = z.infer<typeof EmailIssueSchema>;
-export type EmailReviewResult = z.infer<typeof EmailReviewResultSchema>;
+export type CodeIssue = z.infer<typeof CodeIssueSchema>;
+export type CodeReviewResult = z.infer<typeof CodeReviewResultSchema>;
 
 // Helper to convert Zod schema to JSON Schema with proper $ref handling
 type JsonSchema = Record<string, unknown>;
@@ -70,45 +62,44 @@ const toJsonSchema = (schema: z.ZodTypeAny): JsonSchema =>
 
 // Convert to JSON Schema for API use
 // Use $refStrategy: 'root' to properly inline all $ref definitions
-const EmailReviewJSONSchema = toJsonSchema(EmailReviewResultSchema);
+const CodeReviewJSONSchema = toJsonSchema(CodeReviewResultSchema);
 
 // -----------------------------------------------------------------------------
 // Prompt Function
 // -----------------------------------------------------------------------------
 
-const reviewPrompt = (emailContent: string) => `You are an email communication analyst.
+const reviewPrompt = (filePath: string) => `You are a JavaScript code reviewer.
 
-Use the available skills to analyze this email:
+Use the js-code-review skill to analyze the JavaScript file at:
+${filePath}
 
-"""
-${emailContent}
-"""
+Steps:
+1. Read the file using the Read tool
+2. Use the js-code-review skill to analyze the code
+3. Return a comprehensive review
 
-Apply the skills' criteria to assess:
-- Tone (too-casual, too-formal, appropriate, or mixed) - use email-etiquette skill
-- Communication style (assertive, passive, aggressive, passive-aggressive) - use communication-style skill
-- Structure issues
-- Clarity problems
-- Grammar/spelling errors
-- Professionalism
+Focus on:
+- Code quality issues (var, console.log, unused variables)
+- Potential bugs (loose equality, missing await, null access)
+- Security issues (eval, innerHTML, hardcoded secrets)
+- Best practices recommendations
 
-Return the analysis with:
-- overallTone: assessment of the email's tone
-- communicationStyle: the primary communication style detected
-- score: quality score 0-100
-- issues: array of specific issues with category, severity, description, suggestion
-- strengths: positive aspects of the email
-- revisedEmail: optionally provide an improved version if score is below 80`;
+Return the review with:
+- filename: the basename of the file
+- summary: brief overview of code quality
+- issues: array of specific issues found with line, severity, category, message, suggestion
+- score: overall quality score 0-100
+- recommendations: general improvement suggestions`;
 
 // -----------------------------------------------------------------------------
-// Exported Function: reviewEmail()
+// Exported Function: reviewJavaScriptFile()
 // -----------------------------------------------------------------------------
 
-export async function reviewEmail(
-  emailContent: string
-): Promise<EmailReviewResult> {
+export async function reviewJavaScriptFile(
+  filePath: string
+): Promise<CodeReviewResult> {
   for await (const message of query({
-    prompt: reviewPrompt(emailContent),
+    prompt: reviewPrompt(filePath),
     options: {
       cwd: PROJECT_ROOT,
       settingSources: ["project"],
@@ -117,9 +108,8 @@ export async function reviewEmail(
       // Enforce structured output matching our schema
       outputFormat: {
         type: "json_schema",
-        schema: EmailReviewJSONSchema,
+        schema: CodeReviewJSONSchema,
       },
-
     },
   })) {
     if (message.type === "assistant") {
@@ -132,6 +122,7 @@ export async function reviewEmail(
         }
       }
     }
+
     // Handle successful structured output
     if (
       message.type === "result" &&
@@ -139,7 +130,7 @@ export async function reviewEmail(
       message.structured_output
     ) {
       // Validate with Zod for type safety
-      const parsed = EmailReviewResultSchema.safeParse(message.structured_output);
+      const parsed = CodeReviewResultSchema.safeParse(message.structured_output);
 
       if (parsed.success) {
         return parsed.data;

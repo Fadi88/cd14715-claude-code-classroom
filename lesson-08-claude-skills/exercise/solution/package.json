@@ -1,7 +1,7 @@
 {
-  "name": "email-etiquette-skill",
+  "name": "js-code-reviewer",
   "version": "1.0.0",
-  "description": "Demo: Create a Claude Skill for email etiquette analysis that agents can invoke for professional communication guidance",
+  "description": "Exercise: Build a JavaScript code reviewer using Claude Skills with structured outputs",
   "main": "src/index.ts",
   "scripts": {
     "start": "npx tsx src/index.ts"
@@ -10,8 +10,8 @@
     "claude",
     "agent-sdk",
     "skills",
-    "email-etiquette",
-    "reusable-expertise"
+    "code-review",
+    "javascript"
   ],
   "author": "Udacity",
   "license": "ISC",

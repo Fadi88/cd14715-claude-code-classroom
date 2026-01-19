@@ -1,10 +1,12 @@
-# Demo: Claude Skills - Email Etiquette
+# Demo: Claude Skills - Multi-Skill Email Analysis
 
-Build an agent that reviews emails using a Claude Skill.
+Build an agent that uses multiple Claude Skills for comprehensive email analysis.
 
 ## Scenario
 
-Your team reviews emails but lacks consistent quality standards. Build an agent that uses an email etiquette skill to analyze emails for tone, structure, and professionalism.
+Your team reviews emails but lacks consistent quality standards. Build an agent that uses **two skills** to analyze emails:
+1. **email-etiquette**: Tone, structure, clarity, and professionalism
+2. **communication-style**: Assertive, passive, aggressive, or passive-aggressive patterns
 
 ## Project Structure
 
@@ -12,8 +14,10 @@ Your team reviews emails but lacks consistent quality standards. Build an agent 
 demo/
 ├── .claude/
 │   └── skills/
-│       └── email-etiquette/
-│           └── SKILL.md        # Email review skill
+│       ├── email-etiquette/
+│       │   └── SKILL.md        # Email review skill
+│       └── communication-style/
+│           └── SKILL.md        # Communication style skill
 ├── src/
 │   ├── email-reviewer.ts       # Exported function (deliverable)
 │   ├── sample-emails.ts        # Test emails
@@ -30,30 +34,13 @@ npm install
 
 ## Authentication Setup
 
-Choose **one** authentication method:
-
-### Option 1: AWS Bedrock (Recommended for Vocareum)
-
 Create `.env`:
-```
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key-id
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
-AWS_SESSION_TOKEN=your-session-token
-CLAUDE_CODE_USE_BEDROCK=1
-ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
-```
 
-Copy AWS credentials from your Vocareum workspace.
-
-### Option 2: Direct Anthropic API
-
-Create `.env`:
+Add your Anthropic API key if working locally to .env:
 ```
 ANTHROPIC_API_KEY=your-key-here
 ```
-
-Get your API key from https://console.anthropic.com
+IMPORTANT: This is already set up in Vocareum workspace
 
 ## Run
 
@@ -61,23 +48,13 @@ Get your API key from https://console.anthropic.com
 npm start
 ```
 
-## Deliverable: email-reviewer.ts
+## Key Pattern: Multi-Skill Usage
 
-```typescript
-export interface EmailReviewResult {
-  raw: string;
-}
-
-export async function reviewEmail(
-  emailContent: string
-): Promise<EmailReviewResult>
-```
-
-## Key Pattern: Using Skills with Agent SDK
+Claude autonomously discovers and uses multiple skills based on their descriptions:
 
 ```typescript
 for await (const message of query({
-  prompt: reviewPrompt(emailContent),
+  prompt: `Use the available skills to analyze this email...`,
   options: {
     cwd: PROJECT_ROOT,                    // Where .claude/skills/ lives
     settingSources: ["project"],          // Load skills from filesystem
@@ -86,9 +63,11 @@ for await (const message of query({
 })) { ... }
 ```
 
-## Skill: email-etiquette
+Claude reads the YAML frontmatter `description` in each SKILL.md to decide which skills are relevant.
 
-The skill teaches the agent to check for:
+## Skills
+
+### email-etiquette
 
 | Category | Issues |
 |----------|--------|
@@ -97,7 +76,31 @@ The skill teaches the agent to check for:
 | Clarity | Vague requests, missing context |
 | Grammar | Typos, incomplete sentences |
 
-## Key Takeaway
+### communication-style
 
-Skills extend Claude with reusable expertise stored in `.claude/skills/`. Use `settingSources: ["project"]` to load skills and the `Skill` tool to apply them. Skills provide consistent analysis across agents.
+| Style | Characteristics |
+|-------|-----------------|
+| Assertive | Clear, direct, respectful "I" statements |
+| Passive | Excessive hedging, over-apologizing |
+| Aggressive | Blaming, demanding, dismissive |
+| Passive-aggressive | Backhanded compliments, sarcasm |
 
+## SKILL.md Frontmatter
+
+Each skill requires YAML frontmatter with a `description` for Claude to discover it:
+
+```yaml
+---
+description: "Professional email communication expert..."
+---
+
+# Email Etiquette Skill
+...
+```
+
+## Key Takeaways
+
+1. **Multiple Skills**: Store related skills in `.claude/skills/` subdirectories
+2. **Skill Discovery**: Claude uses the `description` frontmatter to find relevant skills
+3. **Autonomous Selection**: Claude decides which skills to invoke based on the task
+4. **Consistent Analysis**: Skills provide reusable expertise across agents
