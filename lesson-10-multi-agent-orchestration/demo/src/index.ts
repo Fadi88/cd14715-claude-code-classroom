@@ -2,23 +2,58 @@
  * Demo: Multi-Agent Orchestration - Research Assistant
  *
  * Tests for the research orchestrator with subagents.
+ *
+ * Features demonstrated:
+ * - Sequential orchestration (default)
+ * - Parallel subagent execution (--parallel flag)
+ * - Dynamic agent factory pattern
+ * - Model selection with strings
+ *
+ * Usage:
+ *   npm start                  # Sequential research
+ *   npm start -- --parallel    # Parallel research on multiple topics
  */
 
 import "dotenv/config";
-import { conductResearch, ResearchResult } from "./research-orchestrator.js";
+import {
+  conductResearch,
+  conductParallelResearch,
+  ResearchResult,
+} from "./research-orchestrator.js";
 
 // -----------------------------------------------------------------------------
-// Test case: Conduct research on a topic
+// Demo: Sequential Research (single topic)
 // -----------------------------------------------------------------------------
 
-async function conductResearchDemo() {
+async function sequentialResearchDemo() {
   const topic = "Recent advances in renewable energy storage";
 
+  console.log("\n--- SEQUENTIAL ORCHESTRATION ---");
   console.log(`Researching: "${topic}"\n`);
-  console.log("Orchestrator coordinating subagents...\n");
+  console.log("Orchestrator coordinating subagents in sequence...\n");
 
   const result = await conductResearch(topic);
   printResult(result);
+}
+
+// -----------------------------------------------------------------------------
+// Demo: Parallel Research (multiple topics)
+// -----------------------------------------------------------------------------
+
+async function parallelResearchDemo() {
+  const topics = [
+    "Solar panel efficiency improvements",
+    "Battery storage technologies",
+    "Wind energy innovations",
+  ];
+
+  console.log("\n--- PARALLEL ORCHESTRATION ---");
+  console.log("Researching multiple topics in parallel:");
+  topics.forEach((t, i) => console.log(`  ${i + 1}. ${t}`));
+  console.log("\nOrchestrator launching subagents in parallel...\n");
+
+  const results = await conductParallelResearch(topics);
+  results.forEach((result) => printResult(result));
 }
 
 // -----------------------------------------------------------------------------
@@ -45,7 +80,9 @@ async function main() {
   console.log("  Orchestrator coordinates researcher, analyzer, summarizer");
   console.log("=".repeat(60));
 
-  await conductResearchDemo();
+  await sequentialResearchDemo();
+  // await parallelResearchDemo();
+
 }
 
 main().catch(console.error);

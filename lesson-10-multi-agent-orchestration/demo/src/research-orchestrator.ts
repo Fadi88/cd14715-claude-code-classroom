@@ -2,15 +2,17 @@
  * Research Orchestrator - Deliverable
  *
  * Uses subagents pattern to coordinate specialized agents for research.
+ *
+ * Features demonstrated:
+ * - Async generator input mode (streaming pattern)
+ * - Model selection with strings ('sonnet', 'haiku')
+ * - Dynamic agent factory pattern
+ * - Parallel subagent execution
+ * - Sequential orchestration workflow
  */
 
 import "dotenv/config";
-import { query } from "@anthropic-ai/claude-agent-sdk";
-
-const model = process.env.ANTHROPIC_MODEL;
-if (!model) {
-  throw new Error("ANTHROPIC_MODEL is not set");
-}
+import { query, AgentDefinition } from "@anthropic-ai/claude-agent-sdk";
 
 // -----------------------------------------------------------------------------
 // Exported Types
@@ -22,25 +24,51 @@ export interface ResearchResult {
 }
 
 // -----------------------------------------------------------------------------
-// Subagent Definitions
+// Async Generator Input Mode (Streaming Pattern)
+// This is the recommended pattern for streaming compatibility
 // -----------------------------------------------------------------------------
 
-const subagents = {
-  researcher: {
+async function* generateMessages(userMessage: string) {
+  yield {
+    type: "user" as const,
+    message: { role: "user" as const, content: userMessage },
+    parent_tool_use_id: null,
+    session_id: "research-orchestrator-session",
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Dynamic Agent Factory Pattern
+// Creates agents with runtime customization based on task complexity
+// -----------------------------------------------------------------------------
+
+type ModelType = "sonnet" | "haiku" | "opus";
+
+interface AgentFactoryOptions {
+  useWebSearch?: boolean;
+  modelOverride?: ModelType;
+}
+
+function createResearchAgent(options: AgentFactoryOptions = {}): AgentDefinition {
+  return {
     description: "Research specialist that gathers information from web sources",
     prompt: `You are a research specialist.
 
-When asked to research a topic:
-1. Use WebSearch to find authoritative sources
-2. Gather diverse perspectives and data points
-3. Return findings in a structured format
+            When asked to research a topic:
+            1. Use WebSearch to find authoritative sources
+            2. Gather diverse perspectives and data points
+            3. Return findings in a structured format
 
-Focus on credible, recent sources. Be thorough but concise.`,
-    tools: ["WebSearch"],
-    model,
-  },
+            Focus on credible, recent sources. Be thorough but concise.`,
+    // Use model strings: 'sonnet', 'haiku', or 'opus'
+    model: options.modelOverride || "sonnet",
+    tools: ['WebSearch']
 
-  analyzer: {
+  };
+}
+
+function createAnalyzerAgent(modelOverride?: ModelType): AgentDefinition {
+  return {
     description: "Analysis specialist that finds patterns and insights in data",
     prompt: `You are a data analysis specialist.
 
@@ -52,26 +80,39 @@ When given research findings:
 
 Provide analytical depth, not just summaries.`,
     tools: [],
-    model,
-  },
+    // Use haiku for simpler analysis tasks to reduce costs
+    model: modelOverride || "haiku",
+  };
+}
 
-  summarizer: {
+function createSummarizerAgent(modelOverride?: ModelType): AgentDefinition {
+  return {
     description: "Summarization specialist that creates clear, concise reports",
     prompt: `You are a summarization specialist.
 
-When given research and analysis:
-1. Distill into key points
-2. Create an executive summary
-3. Highlight actionable recommendations
+              When given research and analysis:
+              1. Distill into key points
+              2. Create an executive summary
+              3. Highlight actionable recommendations
 
-Be concise but comprehensive.`,
+              Be concise but comprehensive.`,
     tools: [],
-    model,
-  },
+    model: modelOverride || "haiku",
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Static Subagent Definitions (using factory pattern)
+// -----------------------------------------------------------------------------
+
+const subagents: Record<string, AgentDefinition> = {
+  researcher: createResearchAgent(),
+  analyzer: createAnalyzerAgent(),
+  summarizer: createSummarizerAgent(),
 };
 
 // -----------------------------------------------------------------------------
-// Main Function
+// Main Function: Sequential Orchestration
 // -----------------------------------------------------------------------------
 
 export async function conductResearch(topic: string): Promise<ResearchResult> {
@@ -99,14 +140,18 @@ Begin now.`;
   let finalReport = "";
 
   for await (const message of query({
-    prompt: orchestratorPrompt,
+    prompt: generateMessages(orchestratorPrompt),
     options: {
-      allowedTools: ["Task"],
+      allowedTools: ["Task", "WebSearch"],
       agents: subagents,
-      model,
-      maxTurns: 15,
+      model: process.env.ANTHROPIC_MODEL,
+      maxTurns: 10,
     },
   })) {
+    // as any here is explicit, the SDK typing system does not yet know about parent_tool_use_id
+    if ((message as any).parent_tool_use_id) {
+      console.log("  (running inside subagent)");
+    }
     if (message.type === "assistant") {
       const content = message.message?.content;
       if (Array.isArray(content)) {
@@ -117,7 +162,10 @@ Begin now.`;
           }
         }
       }
-    } else if (message.type === "result" && message.subtype === "success") {
+
+    }
+
+    else if (message.type === "result" && message.subtype === "success") {
       finalReport = message.result;
     } else if (message.type === "result") {
       throw new Error(`Research failed: ${message.subtype}`);
@@ -128,4 +176,68 @@ Begin now.`;
     topic,
     finalReport,
   };
+}
+
+// -----------------------------------------------------------------------------
+// Parallel Research Function
+// Demonstrates running multiple subagents in parallel
+// -----------------------------------------------------------------------------
+
+export async function conductParallelResearch(
+  topics: string[]
+): Promise<ResearchResult[]> {
+  const parallelPrompt = `You are a research orchestrator coordinating specialized subagents.
+
+You have access to three subagents via the Task tool:
+- researcher: Gathers information using web search
+- analyzer: Finds patterns and insights in data
+- summarizer: Creates concise summaries and recommendations
+
+IMPORTANT: You should invoke multiple subagents IN PARALLEL when possible.
+The Task tool supports parallel invocation - call multiple tasks in the same response.
+
+Research the following topics IN PARALLEL:
+${topics.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+
+For EACH topic, use the researcher subagent to gather information.
+Launch all research tasks simultaneously for efficiency.
+
+After all research completes, provide a combined summary of findings.`;
+
+  const results: ResearchResult[] = [];
+
+  for await (const message of query({
+    prompt: generateMessages(parallelPrompt),
+    options: {
+      allowedTools: ["Task"],
+      agents: subagents,
+      model: process.env.ANTHROPIC_MODEL,
+      maxTurns: 20,
+    },
+  })) {
+    if (message.type === "assistant") {
+      const content = message.message?.content;
+      if (Array.isArray(content)) {
+        // Count parallel task invocations
+        const taskBlocks = content.filter(
+          (block) => block.type === "tool_use" && block.name === "Task"
+        );
+        if (taskBlocks.length > 1) {
+          console.log(`[Orchestrator]: Launching ${taskBlocks.length} subagents in PARALLEL`);
+        }
+      }
+    } else if (message.type === "result" && message.subtype === "success") {
+      // Parse results for each topic
+      topics.forEach((topic) => {
+        results.push({
+          topic,
+          finalReport: message.result,
+        });
+      });
+    } else if (message.type === "result") {
+      throw new Error(`Parallel research failed: ${message.subtype}`);
+    }
+  }
+
+  return results;
 }
