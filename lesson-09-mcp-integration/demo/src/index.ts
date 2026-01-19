@@ -18,10 +18,15 @@ async function summarizePublicRepoFile() {
     "README.md"
   );
 
+  // Display structured output fields
   console.log(`Repository: ${result.repo}`);
   console.log(`File: ${result.path}\n`);
-  console.log("Summary:\n");
-  console.log(result.raw);
+  console.log(`Purpose: ${result.purpose}\n`);
+  console.log("Key Sections:");
+  result.keySections.forEach((section, i) => console.log(`  ${i + 1}. ${section}`));
+  console.log("\nPatterns:");
+  result.patterns.forEach((pattern, i) => console.log(`  ${i + 1}. ${pattern}`));
+  console.log(`\nSummary: ${result.summary}`);
 }
 
 // -----------------------------------------------------------------------------

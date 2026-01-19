@@ -3,11 +3,20 @@
  *
  * Deliverable: summarizeGitHubFile() function using Claude Agent SDK
  * with GitHub MCP server to fetch and summarize files from public repos.
+ *
+ * Features demonstrated:
+ * - Async generator input mode (streaming pattern)
+ * - MCP server connection status handling
+ * - Tool naming convention (mcp__<server>__<tool>)
+ * - Wildcard tool patterns
+ * - Structured outputs with Zod validation
  */
 
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config();
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { githubMcpServer, githubTools } from "./config/mcp.config.js";
 
 const model = process.env.ANTHROPIC_MODEL;
 if (!model) {
@@ -15,33 +24,38 @@ if (!model) {
 }
 
 // -----------------------------------------------------------------------------
-// Exported Types
+// Exported Types (Zod Schemas for Structured Output)
 // -----------------------------------------------------------------------------
 
-export interface GitHubFileSummary {
-  repo: string;
-  path: string;
-  raw: string;
+export const GitHubFileSummarySchema = z.object({
+  repo: z.string().describe("Repository in format owner/repo"),
+  path: z.string().describe("File path within the repository"),
+  purpose: z.string().describe("The main purpose of this file"),
+  keySections: z.array(z.string()).describe("Key sections or functions in the file"),
+  patterns: z.array(z.string()).describe("Notable patterns or techniques used"),
+  summary: z.string().describe("Brief overall summary of the file"),
+});
+
+export type GitHubFileSummary = z.infer<typeof GitHubFileSummarySchema>;
+
+// Convert to JSON Schema for API structured output
+const GitHubFileSummaryJSONSchema = zodToJsonSchema(GitHubFileSummarySchema, {
+  $refStrategy: "root",
+});
+
+// -----------------------------------------------------------------------------
+// Async Generator Input Mode (Streaming Pattern)
+// This is the recommended pattern for MCP/streaming compatibility
+// -----------------------------------------------------------------------------
+
+async function* generateMessages(userMessage: string) {
+  yield {
+    type: "user" as const,
+    message: { role: "user" as const, content: userMessage },
+    parent_tool_use_id: null,
+    session_id: "github-summarizer-session",
+  };
 }
-
-// -----------------------------------------------------------------------------
-// Prompt Function
-// -----------------------------------------------------------------------------
-
-const summarizePrompt = (owner: string, repo: string, path: string) => `You have access to GitHub via MCP.
-
-Fetch and summarize the file from this repository:
-- Owner: ${owner}
-- Repository: ${repo}
-- File path: ${path}
-
-Steps:
-1. Use the mcp__github__get_file_contents tool to fetch the file
-2. Analyze the content
-3. Provide a summary with:
-   - Purpose of the file
-   - Key sections or functions
-   - Notable patterns or techniques used`;
 
 // -----------------------------------------------------------------------------
 // Exported Function: summarizeGitHubFile()
@@ -52,37 +66,71 @@ export async function summarizeGitHubFile(
   repo: string,
   path: string
 ): Promise<GitHubFileSummary> {
-  let rawResult = "";
+  const userMessage = `You have access to GitHub via MCP.
 
-  for await (const message of query({
-    prompt: summarizePrompt(owner, repo, path),
-    options: {
-      mcpServers: {
-        github: githubMcpServer,
+        Fetch and summarize the file from this repository:
+        - Owner: ${owner}
+        - Repository: ${repo}
+        - File path: ${path}
+
+        Steps:
+        1. Use the appropriate mcp tool from github MCP server to fetch the file. if that doesnt work, explain the error clearly
+        2. Analyze the content
+        3. Return structured data with:
+          - repo: "${owner}/${repo}"
+          - path: "${path}"
+          - purpose: Main purpose of the file
+          - keySections: Key sections or functions
+          - patterns: Notable patterns or techniques used
+          - summary: Brief overall summary`;
+
+  try {
+    for await (const message of query({
+      prompt: generateMessages(userMessage),
+      options: {
+        mcpServers: {
+          github: {
+            type: "http",
+            url: "https://api.githubcopilot.com/mcp/",
+            headers: {
+              Authorization: `Bearer ${process.env.GITHUB_TOKEN || ""}`
+            }
+          }
+        },
+        model,
+        allowedTools: ["mcp__github__*"],
+        // Structured output configuration
+        outputFormat: {
+          type: "json_schema",
+          schema: GitHubFileSummaryJSONSchema,
+        },
       },
-      model,
-      allowedTools: githubTools,
-    },
-  })) {
-    if (message.type === "assistant") {
-      const content = message.message?.content;
-      if (Array.isArray(content)) {
-        for (const block of content) {
-          if (block.type === "tool_use") {
-            console.log(`[Tool]: ${block.name}`);
+    })) {
+      // Check MCP server connection status on init
+      if (message.type === "system" && message.subtype === "init") {
+        console.log("Available MCP tools:", message.mcp_servers);
+      }
+
+      if (message.type === "assistant") {
+        const content = message.message?.content;
+        if (Array.isArray(content)) {
+          for (const block of content) {
+            if (block.type === "tool_use") {
+              console.log(`[Tool]: ${block.name}`);
+            }
           }
         }
       }
+      // Handle structured output result
+      if (message.type === "result" && message.subtype === "success" && message.structured_output) {
+        return GitHubFileSummarySchema.parse(message.structured_output);
+      }
     }
-    if (message.type === "result" && message.subtype === "success") {
-      rawResult = message.result;
-      break;
-    }
+  } catch (error) {
+    throw new Error("Failed to get structured output from agent");
   }
 
-  return {
-    repo: `${owner}/${repo}`,
-    path,
-    raw: rawResult,
-  };
+  throw new Error("Error occured. Could not summarize GitHub file.");
+
+
 }

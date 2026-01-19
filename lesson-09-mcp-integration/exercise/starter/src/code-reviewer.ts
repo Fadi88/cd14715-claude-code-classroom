@@ -1,13 +1,14 @@
 /**
- * Code Quality Reviewer - Deliverable
+ * Code Quality Reviewer - Exercise
  *
- * Uses ESLint MCP server to analyze code quality,
+ * TODO: Build an agent that uses ESLint MCP server to analyze code quality,
  * identify issues, and provide recommendations.
  *
- * Features demonstrated:
- * - Async generator input mode (streaming pattern)
- * - MCP server connection status handling
- * - Structured output with Zod validation
+ * Learning objectives:
+ * - Use MCP servers with the Claude Agent SDK
+ * - Implement async generator input mode (streaming pattern)
+ * - Handle MCP server connection status
+ * - Parse and return structured results
  */
 
 import "dotenv/config";
@@ -22,7 +23,7 @@ if (!model) {
 }
 
 // -----------------------------------------------------------------------------
-// Exported Types
+// Exported Types (provided - no changes needed)
 // -----------------------------------------------------------------------------
 
 export const LintIssueSchema = z.object({
@@ -68,25 +69,19 @@ export const CodeQualityReportJSONSchema = zodToJsonSchema(CodeQualityReportSche
 });
 
 // -----------------------------------------------------------------------------
-// Async Generator Input Mode (Streaming Pattern)
+// TODO 1: Implement async generator input mode
 // This is the recommended pattern for MCP/streaming compatibility
 // -----------------------------------------------------------------------------
 
 async function* generateMessages(userMessage: string) {
-  yield {
-    type: "user" as const,
-    message: { role: "user" as const, content: userMessage },
-    parent_tool_use_id: null,
-    session_id: "code-review-session",
-  };
+  throw new Error("TODO: Implement generateMessages async generator");
 }
 
 // -----------------------------------------------------------------------------
 // Main Function
 // -----------------------------------------------------------------------------
 
-export async function reviewCodeFile(filePath: string): Promise<CodeQualityReport> {
-
+export async function reviewCodeFile(filePath: string): Promise<any> {
   const userMessage = `You are a code quality reviewer with access to ESLint via MCP.
 
 Analyze the JavaScript file and provide a comprehensive quality report.
@@ -123,49 +118,13 @@ ANALYSIS REQUIREMENTS:
 
 Return the complete quality report in the structured JSON format.`;
 
-  for await (const message of query({
-    prompt: generateMessages(userMessage),
-    options: {
-      mcpServers: mcpServersConfig,
-      model,
-      allowedTools: [...eslintTools, 'Read'],
-      // Structured output configuration
-      outputFormat: {
-        type: "json_schema",
-        schema: CodeQualityReportJSONSchema,
-      },
-    },
-  })) {
-    // Check MCP server connection status on init
-    if (message.type === "init") {
-      const initMessage = message as { mcpServers?: Record<string, { status: string; error?: string }> };
-      if (initMessage.mcpServers) {
-        for (const [name, server] of Object.entries(initMessage.mcpServers)) {
-          if (server.status === "failed") {
-            throw new Error(`MCP server '${name}' failed to connect: ${server.error || "Unknown error"}`);
-          }
-          console.log(`[MCP]: Server '${name}' status: ${server.status}`);
-        }
-      }
-    }
+  // TODO 2: Call the query function 
 
-    if (message.type === "assistant") {
-      const content = message.message?.content;
-      if (Array.isArray(content)) {
-        for (const block of content) {
-          if (block.type === "tool_use") {
-            console.log(`[Tool]: ${block.name}`);
-          }
-        }
-      }
-    // Handle structured output result
-    } else if (message.type === "result" && message.subtype === "success" && message.structured_output) {
-      return CodeQualityReportSchema.parse(message.structured_output);
-    } else if (message.type === "result" && message.subtype !== "success") {
-      console.error(`[Error]: ${message.subtype}`);
-      throw new Error(`Failed to generate code quality report: ${message.subtype}`);
-    }
-  }
+  //
+  // TODO 3: Handle the message stream:
+  // - Check for "init" message to verify MCP server connection status
+  // - Log tool use events (when message.type === "assistant")
+  // - Return the result when message.type === "result" && message.subtype === "success"
 
-  throw new Error("Failed to get structured output from agent");
+  throw new Error("TODO: Implement reviewCodeFile using query() with MCP servers");
 }
