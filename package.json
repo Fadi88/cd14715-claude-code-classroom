@@ -26,6 +26,12 @@
     "lesson-10-multi-agent-orchestration/demo",
     "lesson-10-multi-agent-orchestration/exercise/starter",
     "lesson-10-multi-agent-orchestration/exercise/solution",
+    "lesson-11-tdd-with-ai/demo",
+    "lesson-11-tdd-with-ai/exercise/starter",
+    "lesson-11-tdd-with-ai/exercise/solution",
+    "lesson-12-evaluating-agents/demo",
+    "lesson-12-evaluating-agents/exercise/starter",
+    "lesson-12-evaluating-agents/exercise/solution",
     "project/starter"
   ]
 }
