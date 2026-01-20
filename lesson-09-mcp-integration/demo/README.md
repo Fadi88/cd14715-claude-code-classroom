@@ -27,28 +27,11 @@ npm install
 
 ## Authentication Setup
 
-Choose **one** authentication method:
+In Vocareum workspace, `ANTHROPIC_API_KEY` is already set in your environment.
 
-### Option 1: AWS Bedrock (Recommended for Vocareum)
-
-Create `.env`:
+For local development, create `.env`:
 ```
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key-id
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
-AWS_SESSION_TOKEN=your-session-token
-CLAUDE_CODE_USE_BEDROCK=1
-ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
-GITHUB_TOKEN=ghp_your-github-token
-```
-
-Copy AWS credentials from your Vocareum workspace.
-
-### Option 2: Direct Anthropic API
-
-Create `.env`:
-```
-ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_API_KEY=sk-ant-your-key-here
 GITHUB_TOKEN=ghp_your-github-token
 ```
 
@@ -63,11 +46,17 @@ npm start
 ## Deliverable: github-summarizer.ts
 
 ```typescript
-export interface GitHubFileSummary {
-  repo: string;
-  path: string;
-  raw: string;
-}
+// Zod schema for structured output
+export const GitHubFileSummarySchema = z.object({
+  repo: z.string().describe("Repository in format owner/repo"),
+  path: z.string().describe("File path within the repository"),
+  purpose: z.string().describe("The main purpose of this file"),
+  keySections: z.array(z.string()).describe("Key sections or functions"),
+  patterns: z.array(z.string()).describe("Notable patterns or techniques"),
+  summary: z.string().describe("Brief overall summary"),
+});
+
+export type GitHubFileSummary = z.infer<typeof GitHubFileSummarySchema>;
 
 export async function summarizeGitHubFile(
   owner: string,
@@ -76,7 +65,7 @@ export async function summarizeGitHubFile(
 ): Promise<GitHubFileSummary>
 ```
 
-## Key Pattern: Using MCP Servers
+## Key Pattern: MCP + Structured Output
 
 ```typescript
 import { query } from "@anthropic-ai/claude-agent-sdk";
@@ -86,17 +75,23 @@ for await (const message of query({
   options: {
     mcpServers: {
       github: {
-        type: "stdio",
-        command: "npx",
-        args: ["-y", "@modelcontextprotocol/server-github"],
-        env: {
-          GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_TOKEN,
-        },
+        type: "http",
+        url: "https://api.githubcopilot.com/mcp/",
+        headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` },
       },
     },
-    allowedTools: ["mcp__github__get_file_contents"],
+    allowedTools: ["mcp__github__*"],
+    // Structured output with Zod schema
+    outputFormat: {
+      type: "json_schema",
+      schema: GitHubFileSummaryJSONSchema,
+    },
   },
-})) { ... }
+})) {
+  if (message.type === "result" && message.structured_output) {
+    return GitHubFileSummarySchema.parse(message.structured_output);
+  }
+}
 ```
 
 ## MCP Tool Naming
@@ -111,5 +106,5 @@ Pattern: `mcp__<server-name>__<tool-name>`
 
 ## Key Takeaway
 
-MCP provides standardized access to external tools. Configure the GitHub MCP server, pass it to `query()` via `mcpServers`, and specify allowed tools with `mcp__` prefix. The agent can then fetch files from any GitHub repository.
+MCP provides standardized access to external tools. Configure the GitHub MCP server, pass it to `query()` via `mcpServers`, and specify allowed tools with `mcp__` prefix. Combine with `outputFormat` and Zod schemas to get type-safe structured responses.
 
