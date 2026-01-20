@@ -10,7 +10,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { MODELS, ModelKey } from "./models.js";
 import { TICKETS } from "./sample-tickets.js";
-import { calculateCost, logStats, displayComparison } from "./helpers.js";
+import { calculateCost, logStats, displayComparison, ensureParsedResponse } from "./helpers.js";
 import { Message, Model } from "@anthropic-ai/sdk/resources";
 import dotenv from "dotenv";
 dotenv.config();
@@ -32,13 +32,15 @@ async function callClaude(modelKey: ModelKey, system: string, userMessage: strin
   // start timer
   const start = Date.now();
 
-  const response: Message = await client.messages.create({
+  const rawResponse = await client.messages.create({
     model: model.id as Model,
     max_tokens: 4096,
     system,
     messages: [{ role: "user", content: userMessage }],
   });
 
+  // Ensure response is parsed (handles Vocareum proxy environment)
+  const response = ensureParsedResponse(rawResponse as any);
 
   // stop timer
   const ms = Date.now() - start;

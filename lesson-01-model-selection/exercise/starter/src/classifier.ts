@@ -9,7 +9,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { MODELS, ModelKey } from "./models.js";
-import { calculateCost, logStats, displayComparison } from "./helpers.js";
+import { calculateCost, logStats, displayComparison, ensureParsedResponse } from "./helpers.js";
 import { Message, Model } from "@anthropic-ai/sdk/resources";
 import dotenv from "dotenv";
 dotenv.config();
@@ -29,7 +29,8 @@ async function callClaude(modelKey: ModelKey, system: string, userMessage: strin
   const start = Date.now();
 
   // TODO: Call Claude with the model and system prompt
-  //  const response: Message = await client.messages.create();
+  //  const rawResponse = await client.messages.create({ ... });
+  //  const response = ensureParsedResponse(rawResponse as any); // Required for Vocareum
 
   const ms = Date.now() - start;
   const inputTokens = 0;

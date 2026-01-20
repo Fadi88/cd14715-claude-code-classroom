@@ -1,4 +1,16 @@
 import { MODELS } from "./models.js";
+import { Message } from "@anthropic-ai/sdk/resources";
+
+/**
+ * Ensure API response is parsed as JSON.
+ * Some proxy environments (like Vocareum) may return responses as strings.
+ */
+export function ensureParsedResponse(response: Message | string): Message {
+  if (typeof response === "string") {
+    return JSON.parse(response) as Message;
+  }
+  return response;
+}
 
 /**
  * Calculate the cost of an API call based on token usage

@@ -8,8 +8,19 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Transaction } from "./sample-transactions.js";
 import dotenv from "dotenv";
-import { Model } from "@anthropic-ai/sdk/resources";
+import { Message, Model } from "@anthropic-ai/sdk/resources";
 dotenv.config();
+
+/**
+ * Ensure API response is parsed as JSON.
+ * Some proxy environments (like Vocareum) may return responses as strings.
+ */
+function ensureParsedResponse(response: Message | string): Message {
+  if (typeof response === "string") {
+    return JSON.parse(response) as Message;
+  }
+  return response;
+}
 
 /**Initialize the Anthropic client */
 const client = new Anthropic({
@@ -37,6 +48,8 @@ export interface FraudAnalysis {
 
 export async function analyzeFraudRisk(transaction: Transaction): Promise<FraudAnalysis> {
   // TODO: Create the API call with extended thinking enabled
+  //  const rawResponse = await client.messages.create({ ... });
+  //  const response = ensureParsedResponse(rawResponse as any); // Required for Vocareum
 
   // Use client.messages.create() with these parameters:
 

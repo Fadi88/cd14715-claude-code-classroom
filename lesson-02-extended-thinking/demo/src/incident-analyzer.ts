@@ -6,10 +6,21 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { Model } from "@anthropic-ai/sdk/resources";
+import { Message, Model } from "@anthropic-ai/sdk/resources";
 
 import dotenv from "dotenv";
 dotenv.config();
+
+/**
+ * Ensure API response is parsed as JSON.
+ * Some proxy environments (like Vocareum) may return responses as strings.
+ */
+function ensureParsedResponse(response: Message | string): Message {
+  if (typeof response === "string") {
+    return JSON.parse(response) as Message;
+  }
+  return response;
+}
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -35,12 +46,12 @@ export interface IncidentAnalysis {
 // -----------------------------------------------------------------------------
 
 export async function analyzeIncident(incidentReport: string): Promise<IncidentAnalysis> {
-  const response = await client.messages.create({
+  const rawResponse = await client.messages.create({
     model: model as Model,
     max_tokens: 16000,
     // To turn on extended thinking, add a thinking object
     thinking: {
-      // with the type parameter set to enabled and 
+      // with the type parameter set to enabled and
       type: "enabled",
       // the budget_tokens to a specified token budget for extended thinking.
       // Larger budgets can improve response quality by enabling more thorough analysis for complex problems
@@ -66,6 +77,9 @@ export async function analyzeIncident(incidentReport: string): Promise<IncidentA
       },
     ],
   });
+
+  // Ensure response is parsed (handles Vocareum proxy environment)
+  const response = ensureParsedResponse(rawResponse as any);
 
   // Extract thinking steps and final response from content blocks
   const thinkingSteps: string[] = [];
