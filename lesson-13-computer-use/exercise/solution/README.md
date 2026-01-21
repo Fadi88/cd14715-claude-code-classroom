@@ -40,7 +40,7 @@ function createComputerTool(): ComputerUseTool {
 
 ```typescript
 const response = await client.beta.messages.create({
-  model: "claude-sonnet-4-20250514",
+  model: "claude-sonnet-4-5-20250929",
   max_tokens: 4096,
   system: systemPrompt,
   tools: tools as Anthropic.Beta.BetaTool[],

@@ -8,7 +8,7 @@ import { query } from "@anthropic-ai/claude-agent-sdk";
 import { tipToolServer } from "./tip-calculator.js";
 import { TipAnalysisJSONSchema, TipAnalysisSchema, type TipAnalysis } from "./types.js";
 
-const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
+const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929";
 
 // Input message generator for custom MCP tools (required pattern from Lesson 6)
 async function* generateMessages(userMessage: string) {

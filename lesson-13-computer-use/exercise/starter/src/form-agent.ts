@@ -134,7 +134,7 @@ export async function runFormAutomationAgent(
 
     // TODO 2a: Call Claude with computer use enabled
     // HINT: Use client.beta.messages.create with:
-    // - model: "claude-sonnet-4-20250514"
+    // - model: "claude-sonnet-4-5-20250929"
     // - max_tokens: 4096
     // - system: systemPrompt
     // - tools: tools (cast to Anthropic.Beta.BetaTool[])

@@ -70,7 +70,7 @@ const computerTool = {
 
 // API call with beta header
 const response = await client.beta.messages.create({
-  model: "claude-sonnet-4-20250514",
+  model: "claude-sonnet-4-5-20250929",
   tools: [computerTool],
   messages,
   betas: ["computer-use-2025-01-24"],
