@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "npx tsx src/index.ts",
+    "start:thinking": "npx tsx src/thinking-with-tools.ts",
     "test": "npx tsx src/index.ts",
     "test:unit": "npx tsx src/tax-calculator.test.ts"
   },
@@ -20,6 +21,7 @@
   "type": "module",
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.1.76",
+    "@anthropic-ai/sdk": "^0.52.0",
     "dotenv": "^17.2.3"
   },
   "devDependencies": {

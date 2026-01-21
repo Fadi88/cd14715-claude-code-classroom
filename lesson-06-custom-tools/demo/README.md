@@ -340,6 +340,90 @@ See `tax-calculator.test.ts` for comprehensive examples.
 | 2 | Multiple Tools | Agent chooses between calculate_tax and calculate_tip based on the task |
 | 3 | External API Integration | Fetching real-time weather data from Open-Meteo API with error handling |
 
+## Extended Thinking with Tool Use (Interleaved Thinking)
+
+Combine extended thinking (Lesson 02) with tools (Lesson 06) for transparent reasoning during tool use.
+
+### Run the Demo
+
+```bash
+npm run start:thinking
+```
+
+### Pattern: Interleaved Thinking
+
+When extended thinking is enabled with tools, Claude reasons before and after tool calls:
+
+```
+User: "Calculate tax for $50,000 at 9.3%"
+         ↓
+[thinking] "I need to calculate the tax. Let me use the calculate_tax tool..."
+         ↓
+[tool_use] calculate_tax({ amount: 50000, tax_rate: 9.3 })
+         ↓ (tool result returned)
+[thinking] "The tax calculation shows $4,650. Let me format this clearly..."
+         ↓
+[text] "The tax on $50,000 at 9.3% is $4,650, for a total of $54,650."
+```
+
+### Implementation
+
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+// Enable both thinking and tools
+const response = await client.messages.create({
+  model: "claude-sonnet-4-5-20250929",
+  max_tokens: 16000,
+  thinking: {
+    type: "enabled",
+    budget_tokens: 10000,
+  },
+  tools: [{ name: "calculate_tax", input_schema: { ... } }],
+  messages: [{ role: "user", content: "Calculate tax for $50,000 income in CA" }],
+});
+
+// Response contains interleaved blocks: thinking → tool_use → thinking → text
+for (const block of response.content) {
+  if (block.type === "thinking") {
+    console.log("Claude's reasoning:", block.thinking);
+  } else if (block.type === "tool_use") {
+    console.log("Tool called:", block.name, block.input);
+    // Execute tool and continue conversation
+  } else if (block.type === "text") {
+    console.log("Final response:", block.text);
+  }
+}
+```
+
+### Preserving Thinking Blocks
+
+**IMPORTANT**: When continuing with tool results, include the thinking block:
+
+```typescript
+const continuation = await client.messages.create({
+  model: "claude-sonnet-4-5-20250929",
+  max_tokens: 16000,
+  thinking: { type: "enabled", budget_tokens: 10000 },
+  tools: [calculateTaxTool],
+  messages: [
+    { role: "user", content: "Calculate tax..." },
+    // Include BOTH thinking and tool_use blocks
+    { role: "assistant", content: [thinkingBlock, toolUseBlock] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "...", content: "..." }] },
+  ],
+});
+```
+
+### Use Cases
+
+- **Audit trails**: See exactly why Claude chose specific tools
+- **Complex calculations**: Multi-step reasoning with verification
+- **Debugging**: Understand tool selection decisions
+- **Compliance**: Document AI decision-making process
+
 ## Key Takeaways
 
 1. **Multiple Tools**: Create servers with multiple related tools using the `tools` array
@@ -352,4 +436,5 @@ See `tax-calculator.test.ts` for comprehensive examples.
 8. **Error Handling**: Handle HTTP errors, network failures, and response validation separately
 9. **Real-world Patterns**: Mix local computation tools (tax, tip) with external data tools (weather)
 10. **Unit Testing**: Extract business logic into testable functions for fast, API-free testing during development
+11. **Interleaved Thinking**: Combine extended thinking with tools to see Claude's reasoning during tool selection and result processing
 
