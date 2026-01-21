@@ -238,6 +238,7 @@ describe("Apply Promotional Code", () => {
     });
 
     it("should apply fixed discount code", () => {
+      addItem("PROD-005", 1);
       const result = applyPromoCode("FLAT20");
 
       expect(result.success).toBe(true);
