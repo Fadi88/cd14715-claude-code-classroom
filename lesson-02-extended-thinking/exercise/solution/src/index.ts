@@ -7,9 +7,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { TRANSACTIONS } from "./sample-transactions.js";
 import { analyzeFraudRisk } from "./fraud-analyzer.js";
-import { Model } from "@anthropic-ai/sdk/resources";
+import { Message, Model } from "@anthropic-ai/sdk/resources";
 import dotenv from "dotenv";
 dotenv.config();
+
+/**
+ * Ensure API response is parsed as JSON.
+ * Some proxy environments (like Vocareum) may return responses as strings.
+ */
+function ensureParsedResponse(response: Message | string): Message {
+  if (typeof response === "string") {
+    return JSON.parse(response) as Message;
+  }
+  return response;
+}
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -29,7 +40,7 @@ async function testWithoutThinking() {
 
   const t = TRANSACTIONS.obvious_fraud;
 
-  const response = await client.messages.create({
+  const rawResponse = await client.messages.create({
     model: model as Model,
     max_tokens: 1024,
     messages: [
@@ -39,6 +50,9 @@ async function testWithoutThinking() {
       },
     ],
   });
+
+  // Ensure response is parsed (handles Vocareum proxy environment)
+  const response = ensureParsedResponse(rawResponse as any);
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
   console.log("Result:", text.substring(0, 300) + "...\n");
