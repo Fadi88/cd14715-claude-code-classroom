@@ -13,6 +13,8 @@ import { CONTRACT_FILES } from "./sample-contracts.js";
 // -----------------------------------------------------------------------------
 
 async function testSaasContract() {
+  console.log("\n--- STEP 1: Standardize SaaS Agreement ---\n");
+
   const contract = CONTRACT_FILES.find((c) => c.id === "saas");
 
   if (!contract) {
@@ -22,6 +24,9 @@ async function testSaasContract() {
   const outputFilename = `standardized-${contract.id}.md`;
   const result = await standardizeContract(contract.path, outputFilename);
 
+  console.log(`✅ Input: ${result.inputPath}`);
+  console.log(`✅ Output: ${result.outputPath}`);
+
   return result;
 }
 
@@ -30,6 +35,8 @@ async function testSaasContract() {
 // -----------------------------------------------------------------------------
 
 async function testEmailProposal() {
+  console.log("\n--- STEP 2: Standardize Email Proposal ---\n");
+
   const contract = CONTRACT_FILES.find((c) => c.id === "email");
   if (!contract) {
     throw new Error("Contract not found");
@@ -37,6 +44,10 @@ async function testEmailProposal() {
 
   const outputFilename = `standardized-${contract.id}.md`;
   const result = await standardizeContract(contract.path, outputFilename);
+
+  console.log(`✅ Input: ${result.inputPath}`);
+  console.log(`✅ Output: ${result.outputPath}`);
+
   return result;
 }
 
