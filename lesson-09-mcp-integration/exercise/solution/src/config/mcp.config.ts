@@ -2,7 +2,8 @@
  * MCP Server Configuration for Code Quality Reviewer
  */
 
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config({ override: true });
 
 export interface McpServerConfig {
   type: "stdio";

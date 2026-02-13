@@ -4,7 +4,8 @@
  * Shows how to use GitHub MCP server to fetch and summarize files.
  */
 
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config({ override: true });
 import { summarizeGitHubFile } from "./github-summarizer.js";
 
 // -----------------------------------------------------------------------------

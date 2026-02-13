@@ -59,6 +59,7 @@ export async function analyzeTip(
         type: "json_schema",
         schema: TipAnalysisJSONSchema,
       },
+      maxTurns: 10,
     },
   })) {
     // Track tool calls
@@ -74,6 +75,10 @@ export async function analyzeTip(
           }
         }
       }
+    }
+
+    if (message.type === "result" && message.subtype === "error_max_turns") {
+      console.log("Hit turn limit.");
     }
 
     // Capture structured output

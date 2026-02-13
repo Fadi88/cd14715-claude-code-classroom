@@ -4,7 +4,8 @@
  * Tests for the code reviewer using ESLint MCP.
  */
 
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config({ override: true });
 import { reviewCodeFile, CodeQualityReport } from "./code-reviewer.js";
 import { CODE_FILES } from "./sample-code.js";
 

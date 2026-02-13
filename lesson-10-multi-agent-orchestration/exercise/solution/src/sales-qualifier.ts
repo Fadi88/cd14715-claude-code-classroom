@@ -91,10 +91,10 @@ When asked to research a company, gather:
 3. Technology stack they use
 4. Recent news and developments
 
+IMPORTANT: Use no more than 5 web searches total. Be strategic with your queries.
 Focus on information relevant to B2B software sales.`,
     tools: ["WebSearch"],
-    // Use model string instead of env var
-    model: "sonnet",
+    model: "haiku",
   },
 
   "competitive-analyzer": {
@@ -155,6 +155,8 @@ You have access to three subagents via the Task tool:
 - competitive-analyzer: Analyzes competitive position
 - qualification-scorer: Assesses BANT and calculates deal metrics
 
+Do not perform web search yourself, always delegate to the company-researcher subagent for that.
+
 PROSPECT: ${companyName}
 CONTACT: ${contactInfo.name}, ${contactInfo.title} (${contactInfo.email})
 
@@ -173,12 +175,14 @@ After all agents complete, compile a comprehensive sales briefing with:
 
 Return the briefing as structured JSON.`;
 
+  const startTime = Date.now();
+  const elapsed = () => `Time elapsed so far: ${((Date.now() - startTime) / 1000).toFixed(1)} s`;
+
   for await (const message of query({
     prompt: generateMessages(orchestratorPrompt),
     options: {
       allowedTools: ["Task"],
       agents: subagents,
-      // Use model string instead of env var
       model: "sonnet",
       outputFormat: {
         type: "json_schema",
@@ -187,20 +191,26 @@ Return the briefing as structured JSON.`;
       maxTurns: 15,
     },
   })) {
+    // as any here is explicit, the SDK typing system does not yet know about parent_tool_use_id
     if (message.type === "assistant") {
       const content = message.message?.content;
+      if ((message as any).parent_tool_use_id) {
+        console.log(`  [${elapsed()}](running inside subagent)`, content);
+      }
+
       if (Array.isArray(content)) {
         for (const block of content) {
           if (block.type === "tool_use" && block.name === "Task") {
             const input = block.input as { description?: string };
-            console.log(`[Orchestrator]: Invoking subagent - ${input.description || "task"}`);
+            console.log(`[${elapsed()}] Invoking subagent - ${input.description || "task"} `, block);
           }
         }
       }
     } else if (message.type === "result" && message.subtype === "success" && message.structured_output) {
+      console.log(`[${elapsed()}] DONE`);
       return SalesBriefingSchema.parse(message.structured_output);
     } else if (message.type === "result") {
-      throw new Error(`Qualification failed: ${message.subtype}`);
+      throw new Error(`Qualification failed: ${message.subtype} `);
     }
   }
 

@@ -59,9 +59,10 @@ function createResearchAgent(options: AgentFactoryOptions = {}): AgentDefinition
             2. Gather diverse perspectives and data points
             3. Return findings in a structured format
 
+            IMPORTANT: Use no more than 5 web searches total. Be strategic with your queries.
             Focus on credible, recent sources. Be thorough but concise.`,
     // Use model strings: 'sonnet', 'haiku', or 'opus'
-    model: options.modelOverride || "sonnet",
+    model: options.modelOverride || "haiku",
     tools: ['WebSearch']
 
   };
@@ -72,13 +73,13 @@ function createAnalyzerAgent(modelOverride?: ModelType): AgentDefinition {
     description: "Analysis specialist that finds patterns and insights in data",
     prompt: `You are a data analysis specialist.
 
-When given research findings:
-1. Identify key patterns and trends
-2. Find connections between data points
-3. Highlight important insights
-4. Note any gaps or contradictions
+            When given research findings:
+            1. Identify key patterns and trends
+            2. Find connections between data points
+            3. Highlight important insights
+            4. Note any gaps or contradictions
 
-Provide analytical depth, not just summaries.`,
+    Provide analytical depth, not just summaries.`,
     tools: [],
     // Use haiku for simpler analysis tasks to reduce costs
     model: modelOverride || "haiku",
@@ -118,57 +119,62 @@ const subagents: Record<string, AgentDefinition> = {
 export async function conductResearch(topic: string): Promise<ResearchResult> {
   const orchestratorPrompt = `You are a research orchestrator coordinating specialized subagents.
 
-You have access to three subagents via the Task tool:
-- researcher: Gathers information using web search
-- analyzer: Finds patterns and insights in data
-- summarizer: Creates concise summaries and recommendations
+                      You have access to three subagents via the Task tool:
+                      - researcher: Gathers information using web search
+                      - analyzer: Finds patterns and insights in data
+                      - summarizer: Creates concise summaries and recommendations
 
-For the topic "${topic}", coordinate these agents in sequence:
+                      Do not perform web search yourself, always delegate to the researcher subagent for that.
 
-1. RESEARCH PHASE: Use the researcher subagent to gather information
-2. ANALYSIS PHASE: Use the analyzer subagent to find patterns in the research
-3. SUMMARY PHASE: Use the summarizer subagent to create a final report
+                      For the topic "${topic}", coordinate these agents in sequence:
 
-After all phases complete, combine the outputs into a final comprehensive report with:
-- Executive Summary
-- Key Research Findings
-- Analysis and Insights
-- Recommendations
+                      1. RESEARCH PHASE: Use the researcher subagent to gather information
+                      2. ANALYSIS PHASE: Use the analyzer subagent to find patterns in the research
+                      3. SUMMARY PHASE: Use the summarizer subagent to create a final report
 
-Begin now.`;
+                      After all phases complete, combine the outputs into a final comprehensive report with:
+                      - Executive Summary
+                      - Key Research Findings
+                      - Analysis and Insights
+                      - Recommendations
+
+                        Begin now.`;
 
   let finalReport = "";
+  const startTime = Date.now();
+  const elapsed = () => `Time elapsed so far: ${((Date.now() - startTime) / 1000).toFixed(1)
+    } s`;
 
   for await (const message of query({
     prompt: generateMessages(orchestratorPrompt),
     options: {
-      allowedTools: ["Task", "WebSearch"],
+      allowedTools: ["Task"],
       agents: subagents,
       model: process.env.ANTHROPIC_MODEL,
       maxTurns: 10,
     },
   })) {
     // as any here is explicit, the SDK typing system does not yet know about parent_tool_use_id
-    if ((message as any).parent_tool_use_id) {
-      console.log("  (running inside subagent)");
-    }
+
     if (message.type === "assistant") {
       const content = message.message?.content;
+      if ((message as any).parent_tool_use_id) {
+        console.log(`  [${elapsed()}](running inside subagent)`, content);
+      }
+
       if (Array.isArray(content)) {
         for (const block of content) {
           if (block.type === "tool_use" && block.name === "Task") {
             const input = block.input as { description?: string };
-            console.log(`[Orchestrator]: Invoking subagent - ${input.description || "task"}`);
+            console.log(`[${elapsed()}] Invoking subagent - ${input.description || "task"} `, block);
           }
         }
       }
-
-    }
-
-    else if (message.type === "result" && message.subtype === "success") {
+    } else if (message.type === "result" && message.subtype === "success") {
+      console.log(`[${elapsed()}]DONE`);
       finalReport = message.result;
     } else if (message.type === "result") {
-      throw new Error(`Research failed: ${message.subtype}`);
+      throw new Error(`Research failed: ${message.subtype} `);
     }
   }
 
@@ -191,7 +197,7 @@ export async function conductParallelResearch(
 You have access to three subagents via the Task tool:
 - researcher: Gathers information using web search
 - analyzer: Finds patterns and insights in data
-- summarizer: Creates concise summaries and recommendations
+  - summarizer: Creates concise summaries and recommendations
 
 IMPORTANT: You should invoke multiple subagents IN PARALLEL when possible.
 The Task tool supports parallel invocation - call multiple tasks in the same response.
@@ -235,7 +241,7 @@ After all research completes, provide a combined summary of findings.`;
         });
       });
     } else if (message.type === "result") {
-      throw new Error(`Parallel research failed: ${message.subtype}`);
+      throw new Error(`Parallel research failed: ${message.subtype} `);
     }
   }
 

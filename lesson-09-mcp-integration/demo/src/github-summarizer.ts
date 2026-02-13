@@ -13,9 +13,8 @@
  */
 
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ override: true });
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
 const model = process.env.ANTHROPIC_MODEL;
@@ -38,10 +37,8 @@ export const GitHubFileSummarySchema = z.object({
 
 export type GitHubFileSummary = z.infer<typeof GitHubFileSummarySchema>;
 
-// Convert to JSON Schema for API structured output
-const GitHubFileSummaryJSONSchema = zodToJsonSchema(GitHubFileSummarySchema, {
-  $refStrategy: "root",
-});
+// Convert to JSON Schema using Zod's built-in method, strip extra keys
+const { $schema, additionalProperties, ...GitHubFileSummaryJSONSchema } = z.toJSONSchema(GitHubFileSummarySchema) as Record<string, unknown>;
 
 // -----------------------------------------------------------------------------
 // Async Generator Input Mode (Streaming Pattern)
@@ -66,6 +63,11 @@ export async function summarizeGitHubFile(
   repo: string,
   path: string
 ): Promise<GitHubFileSummary> {
+
+
+  console.log(`Summarizing file from GitHub - ${owner}/${repo}/${path}`);
+
+
   const userMessage = `You have access to GitHub via MCP.
 
         Fetch and summarize the file from this repository:
@@ -90,10 +92,10 @@ export async function summarizeGitHubFile(
       options: {
         mcpServers: {
           github: {
-            type: "http",
-            url: "https://api.githubcopilot.com/mcp/",
-            headers: {
-              Authorization: `Bearer ${process.env.GITHUB_TOKEN || ""}`
+            command: 'npx',
+            args: ['-y', '@modelcontextprotocol/server-github'],
+            env: {
+              GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_TOKEN || ''
             }
           }
         },
@@ -113,6 +115,7 @@ export async function summarizeGitHubFile(
 
       if (message.type === "assistant") {
         const content = message.message?.content;
+        console.log('[Assistant]:', content);
         if (Array.isArray(content)) {
           for (const block of content) {
             if (block.type === "tool_use") {
@@ -122,8 +125,11 @@ export async function summarizeGitHubFile(
         }
       }
       // Handle structured output result
-      if (message.type === "result" && message.subtype === "success" && message.structured_output) {
-        return GitHubFileSummarySchema.parse(message.structured_output);
+      if (message.type === "result") {
+        if (message.subtype === "success" && message.structured_output) {
+          console.log("Structured output received, validating against schema...", message.structured_output);
+          return GitHubFileSummarySchema.parse(message.structured_output);
+        }
       }
     }
   } catch (error) {
