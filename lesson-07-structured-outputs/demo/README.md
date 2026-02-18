@@ -32,34 +32,27 @@ npm install
 
 ## Authentication Setup
 
-Choose **one** authentication method:
-
-### Option 1: AWS Bedrock (Recommended for Vocareum)
-
-Create `.env`:
-```
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key-id
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
-AWS_SESSION_TOKEN=your-session-token
-CLAUDE_CODE_USE_BEDROCK=1
-ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
+Copy `.env.example` to `.env` (required in all environments):
+```bash
+cp .env.example .env
 ```
 
-Copy AWS credentials from your Vocareum workspace.
+In Vocareum workspace, `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are **already configured** in your environment — the `.env` file only needs to provide `ANTHROPIC_MODEL`.
 
-### Option 2: Direct Anthropic API
-
-Create `.env`:
+For local development, also uncomment and fill in your credentials in `.env`:
 ```
-ANTHROPIC_API_KEY=your-api-key-here
+ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_BASE_URL=your-base-url-here
 ```
 
-Get your API key from https://console.anthropic.com
+**Troubleshooting:**
+- **`Error: ANTHROPIC_MODEL is not set`** — make sure you ran `cp .env.example .env`
+- **`Error: API key not found`** — in Vocareum this is pre-configured; locally, set `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` in `.env`
 
 ## Running the Demo
 
 ```bash
+# From this directory (lesson-07-structured-outputs/demo)
 npm start
 ```
 
