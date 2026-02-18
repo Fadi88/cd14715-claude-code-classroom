@@ -13,6 +13,7 @@
 import dotenv from "dotenv";
 dotenv.config({ override: true });
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { eslintTools, mcpServersConfig } from "./config/mcp.config.js";
 
@@ -62,8 +63,8 @@ export type IssueSummary = z.infer<typeof IssueSummarySchema>;
 export type IssueCategories = z.infer<typeof IssueCategoriesSchema>;
 export type CodeQualityReport = z.infer<typeof CodeQualityReportSchema>;
 
-// Convert to JSON Schema using Zod's built-in method, strip extra keys
-const { $schema, additionalProperties, ...CodeQualityReportJSONSchema } = z.toJSONSchema(CodeQualityReportSchema) as Record<string, unknown>;
+// Convert to JSON Schema using zod-to-json-schema, strip extra keys
+const { $schema, additionalProperties, ...CodeQualityReportJSONSchema } = zodToJsonSchema(CodeQualityReportSchema) as Record<string, unknown>;
 
 // -----------------------------------------------------------------------------
 // Async Generator Input Mode (Streaming Pattern)
