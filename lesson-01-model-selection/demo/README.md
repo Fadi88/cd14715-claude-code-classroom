@@ -39,6 +39,7 @@ ANTHROPIC_API_KEY=your-key-here
 ## Run
 
 ```bash
+# From this directory (lesson-01-model-selection/demo)
 npm start
 ```
 
