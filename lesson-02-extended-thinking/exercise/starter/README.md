@@ -31,16 +31,19 @@ Complete the `fraud-analyzer.ts` file by implementing the `analyzeFraudRisk()` f
 ## Setup
 
 ```bash
-# From repo root
-npm install --workspace lesson-02-extended-thinking/exercise/starter
+# From repo root (shared node_modules)
+npm install
 
-# Copy environment file
-cd lesson-02-extended-thinking/exercise/starter
+# From this directory (lesson-02-extended-thinking/exercise/starter):
 cp .env.example .env
+```
 
-# Configure .env (already set in Vocareum):
-# ANTHROPIC_API_KEY=your-api-key-here
-# ANTHROPIC_MODEL=claude-sonnet-4-5-20250929
+In Vocareum workspace, `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are **already configured** — the `.env` file only needs to provide `ANTHROPIC_MODEL`.
+
+For local development, also uncomment and fill in your credentials in `.env`:
+```
+ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_BASE_URL=your-base-url-here
 ```
 
 ## Run

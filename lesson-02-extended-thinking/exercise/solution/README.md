@@ -24,22 +24,22 @@ npm install
 
 ## Authentication Setup
 
-In Vocareum workspace, `ANTHROPIC_API_KEY` and base URL are **already configured** in your environment.
+Copy `.env.example` to `.env` (required in all environments):
+```bash
+cp .env.example .env
+```
 
-For local development:
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-2. Edit `.env` and add your Anthropic API key
+In Vocareum workspace, `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are **already configured** in your environment — the `.env` file only needs to provide `ANTHROPIC_MODEL`.
 
-**Required environment variables:**
-- `ANTHROPIC_API_KEY` — your API key
-- `ANTHROPIC_MODEL` — model to use (already set in `.env.example`)
+For local development, also uncomment and fill in your credentials in `.env`:
+```
+ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_BASE_URL=your-base-url-here
+```
 
 **Troubleshooting:**
-- **`Error: ANTHROPIC_MODEL is not set`** — copy `.env.example` to `.env` as shown above
-- **`Error: API key not found`** — in Vocareum this is pre-configured; locally, set `ANTHROPIC_API_KEY` in `.env`
+- **`Error: ANTHROPIC_MODEL is not set`** — make sure you ran `cp .env.example .env`
+- **`Error: API key not found`** — in Vocareum this is pre-configured; locally, set `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` in `.env`
 
 ## Run
 
