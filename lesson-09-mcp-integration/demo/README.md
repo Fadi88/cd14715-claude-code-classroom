@@ -43,7 +43,7 @@ ANTHROPIC_BASE_URL=your-base-url-here
 **Troubleshooting:**
 - **`Error: ANTHROPIC_MODEL is not set`** — make sure you ran `cp .env.example .env`
 - **`Error: API key not found`** — in Vocareum this is pre-configured; locally, set `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` in `.env`
-- **`Error: GITHUB_TOKEN is not set`** — set `GITHUB_TOKEN` in `.env` with a valid GitHub personal access token
+- **GitHub API errors** — set `GITHUB_TOKEN` in `.env` with a valid GitHub personal access token for higher rate limits
 
 ## Run
 
