@@ -36,12 +36,7 @@ Your SaaS company receives 5,000+ support tickets daily across email, chat, and 
 
 ## Option A: Single Agent Approach
 
-```mermaid
-graph TB
-    Agent["<b>Support Agent</b><br/><br/><b>Tools:</b><br/>- CRM (customer lookup)<br/>- Knowledge Base (search solutions)<br/>- Ticket System (create, update, route)<br/>- Email (send responses)<br/><br/><b>Workflow:</b><br/>1. Read incoming ticket<br/>2. Look up customer in CRM<br/>3. Determine ticket type and urgency<br/>4. Search knowledge base for solutions<br/>5. Either auto-respond OR route to team<br/>6. Update ticket with context"]
-
-    style Agent fill:#e1f5ff,stroke:#333,stroke-width:2px
-```
+![Option A: Single Agent Architecture](diagrams/single-agent.svg)
 
 ### Pros
 - Simple implementation
@@ -77,18 +72,12 @@ INSTRUCTIONS:
 4. Use different colors for different agent types (see demo for style examples)
 -->
 
-```mermaid
-graph TB
-    %% TODO: Create your system architecture diagram here
-    %% Start with: Ticket(["Incoming Ticket"])
-    %% Then add: Triage agent, specialized agents, routing agent, destinations
-    %% Example structure:
-    %% Ticket --> TriageAgent
-    %% TriageAgent --> TechnicalAgent
-    %% TriageAgent --> BillingAgent
-    %% TriageAgent --> KBAgent
-    %% etc.
-```
+> **Your task:** Fill in [`diagrams/multi-agent.mmd`](diagrams/multi-agent.mmd), then render:
+> ```bash
+> mmdc -i diagrams/multi-agent.mmd -o diagrams/multi-agent.svg
+> ```
+
+![Option B: Multi-Agent Architecture](diagrams/multi-agent.svg)
 
 ### Agent Definitions
 
@@ -144,14 +133,12 @@ INSTRUCTIONS:
 5. Refer to the demo's workflow diagram for structure
 -->
 
-```mermaid
-flowchart TD
-    %% TODO: Create your workflow diagram here
-    %% Start with: Start(["START<br/>New Ticket Received"])
-    %% Then add each processing step in sequence
-    %% Show parallel execution using multiple paths
-    %% Add decision points for routing logic
-```
+> **Your task:** Fill in [`diagrams/workflow.mmd`](diagrams/workflow.mmd), then render:
+> ```bash
+> mmdc -i diagrams/workflow.mmd -o diagrams/workflow.svg
+> ```
+
+![Workflow Diagram](diagrams/workflow.svg)
 
 ### Sequence Diagram
 
@@ -174,19 +161,12 @@ INSTRUCTIONS:
 6. Refer to the demo's sequence diagram for examples
 -->
 
-```mermaid
-sequenceDiagram
-    %% TODO: Create your sequence diagram here
-    %% Example structure:
-    %% actor Customer
-    %% participant System as Ticket System
-    %% participant Triage as Triage Agent
-    %%
-    %% Customer->>System: Submit Support Ticket
-    %% System->>Triage: New Ticket Event
-    %% activate Triage
-    %% ... continue the sequence
-```
+> **Your task:** Fill in [`diagrams/sequence.mmd`](diagrams/sequence.mmd), then render:
+> ```bash
+> mmdc -i diagrams/sequence.mmd -o diagrams/sequence.svg
+> ```
+
+![Sequence Diagram](diagrams/sequence.svg)
 
 ---
 
@@ -206,10 +186,12 @@ INSTRUCTIONS:
 4. Choose the model (Haiku for fast, simple checks)
 -->
 
-```mermaid
-graph TB
-    %% TODO: Create your SLA monitoring diagram here
-```
+> **Your task:** Fill in [`diagrams/sla-monitoring.mmd`](diagrams/sla-monitoring.mmd), then render:
+> ```bash
+> mmdc -i diagrams/sla-monitoring.mmd -o diagrams/sla-monitoring.svg
+> ```
+
+![SLA Monitoring Agent](diagrams/sla-monitoring.svg)
 
 ---
 

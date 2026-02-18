@@ -12,7 +12,11 @@ A company wants to automate their customer research process. Instead of a single
 
 > **Note:** This is a documentation-only lesson. No code execution is required — just read through the concepts and study the `ARCHITECTURE.md` deliverable.
 
-> **Viewing diagrams:** `ARCHITECTURE.md` contains Mermaid diagrams. To view them, open the file on GitHub (renders automatically) or paste diagram blocks into [mermaid.live](https://mermaid.live).
+> **Diagrams:** `ARCHITECTURE.md` displays pre-rendered SVG images from the `diagrams/` folder. To modify a diagram, edit the corresponding `.mmd` source file and re-render with:
+> ```bash
+> mmdc -i diagrams/<name>.mmd -o diagrams/<name>.svg
+> ```
+> `mmdc` is available in the Vocareum workspace. For local use: `npm install -g @mermaid-js/mermaid-cli`
 
 ## What You'll Learn
 

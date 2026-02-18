@@ -15,24 +15,32 @@ This is the complete solution for the lesson-03 exercise.
 
 ### Diagrams Included
 
-1. **System Architecture Diagram** (Mermaid graph)
+Diagrams are pre-rendered SVGs in the `diagrams/` folder. Source `.mmd` files are included for reference or modification.
+
+To re-render after editing a source file:
+```bash
+mmdc -i diagrams/<name>.mmd -o diagrams/<name>.svg
+```
+> `mmdc` is available in the Vocareum workspace. For local use: `npm install -g @mermaid-js/mermaid-cli`
+
+1. **System Architecture Diagram** (`diagrams/multi-agent.mmd`)
    - Shows all agents and their relationships
    - Demonstrates parallel execution paths
    - Color-coded by agent type
 
-2. **Workflow Diagram** (Mermaid flowchart)
+2. **Workflow Diagram** (`diagrams/workflow.mmd`)
    - Complete ticket journey from submission to resolution
    - Decision logic for routing (alt/else conditions)
    - Parallel analysis stage clearly marked
    - Four possible outcomes with percentages
 
-3. **Sequence Diagram** (Mermaid sequenceDiagram)
+3. **Sequence Diagram** (`diagrams/sequence.mmd`)
    - Timeline of interactions between components
    - Parallel execution using `par` blocks
    - Activation/deactivation of agents
    - Alternative routing paths using `alt/else`
 
-4. **SLA Monitoring Diagram**
+4. **SLA Monitoring Diagram** (`diagrams/sla-monitoring.mmd`)
    - Background escalation agent design
    - Continuous monitoring approach
 

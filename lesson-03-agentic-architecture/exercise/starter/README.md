@@ -41,36 +41,57 @@ For each agent, define:
 - Whether it can run in parallel
 
 ### Step 3: Create System Architecture Diagram
-Create a Mermaid graph showing:
+Edit `diagrams/multi-agent.mmd` to create a Mermaid graph showing:
 - All agents and their relationships
 - Data flow between agents
 - Parallel vs sequential execution
 - Final destinations (auto-response, human team, escalation)
 
-Refer to the demo's ARCHITECTURE.md for Mermaid syntax examples.
+Then render it:
+```bash
+mmdc -i diagrams/multi-agent.mmd -o diagrams/multi-agent.svg
+```
+
+> `mmdc` is available in the Vocareum workspace. For local use: `npm install -g @mermaid-js/mermaid-cli`
+> For syntax reference, see `demo/diagrams/multi-agent.mmd`.
 
 ### Step 4: Create Workflow Diagram
-Create a Mermaid flowchart showing:
+Edit `diagrams/workflow.mmd` to create a Mermaid flowchart showing:
 - Ticket journey from intake to resolution
 - Decision points (if/else logic)
-- Parallel processing stages
+- Parallel processing stages (use dashed arrows `-.->`)
 - Different routing outcomes
 
+Then render it:
+```bash
+mmdc -i diagrams/workflow.mmd -o diagrams/workflow.svg
+```
+
 ### Step 5: Create Sequence Diagram
-Create a Mermaid sequence diagram showing:
+Edit `diagrams/sequence.mmd` to create a Mermaid sequence diagram showing:
 - Timeline of interactions between components
 - Parallel execution using `par` blocks
 - Customer interaction points
 - SLA monitoring
 
+Then render it:
+```bash
+mmdc -i diagrams/sequence.mmd -o diagrams/sequence.svg
+```
+
 ### Step 6: Complete Agent Definitions Table
 Fill in the comparison table with your agent designs.
 
 ### Step 7: Design SLA Monitoring
-Design a background escalation agent:
+Edit `diagrams/sla-monitoring.mmd` to design a background escalation agent:
 - What triggers escalation?
 - How often does it run?
 - What actions does it take?
+
+Then render it:
+```bash
+mmdc -i diagrams/sla-monitoring.mmd -o diagrams/sla-monitoring.svg
+```
 
 ### Step 8: Analyze Failure Modes
 For each critical component, identify:
@@ -102,13 +123,16 @@ Provide estimated performance metrics.
 
 ## Files to Complete
 
-**ARCHITECTURE.md** - Complete all TODO sections:
-- Option B: Multi-Agent Approach
-- System Architecture Diagram (Mermaid)
-- Workflow Diagram (Mermaid)
-- Sequence Diagram (Mermaid)
+**`diagrams/`** — Fill in each `.mmd` file and render with `mmdc`:
+- `multi-agent.mmd` → `mmdc -i diagrams/multi-agent.mmd -o diagrams/multi-agent.svg`
+- `workflow.mmd` → `mmdc -i diagrams/workflow.mmd -o diagrams/workflow.svg`
+- `sequence.mmd` → `mmdc -i diagrams/sequence.mmd -o diagrams/sequence.svg`
+- `sla-monitoring.mmd` → `mmdc -i diagrams/sla-monitoring.mmd -o diagrams/sla-monitoring.svg`
+
+**`ARCHITECTURE.md`** — Complete all TODO sections (text sections only — diagrams auto-populate from the rendered SVGs above):
+- Option B: Multi-Agent Approach description
 - Agent Definitions Table
-- SLA Monitoring
+- SLA Monitoring rationale
 - Failure Mode Analysis
 - Recommendation
 
