@@ -30,7 +30,7 @@ npm install
 Create `.env`:
 
 
- Add your Anthropic API key if worrking locally to .env:
+ Add your Anthropic API key if working locally to .env:
 ```
 ANTHROPIC_API_KEY=your-key-here
 ```
