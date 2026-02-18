@@ -35,21 +35,26 @@ Complete the `classifier.ts` file by implementing the four test functions:
 ## Setup
 
 ```bash
-# From repo root
-npm install --workspace lesson-01-model-selection/exercise/starter
-
-# Copy environment file
-cd lesson-01-model-selection/exercise/starter
-cp .env.example .env
-
-# Add your Anthropic API key if worrking locally to .env:
-# ANTHROPIC_API_KEY=your-api-key-here
-# IMPORTANT: This is already set up in Vocareum workspace
+# From repo root (shared node_modules)
+npm install
 ```
+
+## Authentication Setup
+
+In Vocareum workspace, `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are **already configured** in your environment.
+
+For local development, copy `.env.example` to `.env` and uncomment your credentials:
+```bash
+cp .env.example .env
+```
+
+**Troubleshooting:**
+- **`Error: API key not found`** — in Vocareum this is pre-configured; locally, set `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` in `.env`
 
 ## Run
 
 ```bash
+# From this directory (lesson-01-model-selection/exercise/starter)
 npm start
 ```
 
