@@ -224,13 +224,14 @@ Choose the right model for each subagent:
 
 ## Authentication Setup
 
-If running Claude Code locally:
+In Vocareum workspace, `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`, and other required variables are **already configured** in your environment — no setup needed.
+
+For local development, set your API key and base URL before running Claude Code:
 
 ```bash
 export ANTHROPIC_API_KEY=your-key-here
+export ANTHROPIC_BASE_URL=your-base-url-here
 ```
-
-**IMPORTANT**: This is already set up in Vocareum workspace.
 
 ## Comparison to Lesson 03
 

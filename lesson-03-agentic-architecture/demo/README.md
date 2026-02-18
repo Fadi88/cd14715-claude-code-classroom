@@ -10,22 +10,9 @@ This demo explores how to design agents that can use tools, iterate on tasks, an
 
 A company wants to automate their customer research process. Instead of a single prompt ("research this company"), they need an agent that can autonomously search the web, analyze findings, follow up on interesting leads, and compile a comprehensive report.
 
-## Setup
+> **Note:** This is a documentation-only lesson. No code execution is required — just read through the concepts and study the `ARCHITECTURE.md` deliverable.
 
-```bash
-# From repo root (shared node_modules)
-npm install
-```
-
-## Authentication Setup
-
-Create `.env`:
-
-Add your Anthropic API key if working locally to .env:
-```
-ANTHROPIC_API_KEY=your-key-here
-```
-IMPORTANT: This is already set up in Vocareum workspace
+> **Viewing diagrams:** `ARCHITECTURE.md` contains Mermaid diagrams. To view them, open the file on GitHub (renders automatically) or paste diagram blocks into [mermaid.live](https://mermaid.live).
 
 ## What You'll Learn
 
