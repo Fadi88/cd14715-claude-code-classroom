@@ -26,15 +26,17 @@ npm install
 
 ## Authentication Setup
 
+In Vocareum workspace, `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are **already configured** in your environment — no setup needed.
 
-Create `.env`:
+For local development:
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit `.env` and fill in your API key and base URL
 
-
- Add your Anthropic API key if working locally to .env:
-```
-ANTHROPIC_API_KEY=your-key-here
-```
- IMPORTANT: This is already set up in Vocareum workspace
+**Troubleshooting:**
+- **`Error: API key not found`** — in Vocareum this is pre-configured; locally, set `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` in `.env`
 
 ## Run
 
