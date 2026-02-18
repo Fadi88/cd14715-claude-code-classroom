@@ -46,6 +46,7 @@ cp .env.example .env
 ## Run
 
 ```bash
+# From this directory (lesson-02-extended-thinking/exercise/starter)
 npm start
 ```
 
