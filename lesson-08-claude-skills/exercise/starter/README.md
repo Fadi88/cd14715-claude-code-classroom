@@ -40,14 +40,22 @@ npm install
 
 ## Authentication Setup
 
-Create `.env`:
+Copy `.env.example` to `.env` (required in all environments):
+```bash
+cp .env.example .env
+```
 
+In Vocareum workspace, `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` are **already configured** in your environment — the `.env` file only needs to provide `ANTHROPIC_MODEL`.
+
+For local development, also uncomment and fill in your credentials in `.env`:
 ```
 ANTHROPIC_API_KEY=your-key-here
-ANTHROPIC_MODEL=claude-sonnet-4-5-20250929
+ANTHROPIC_BASE_URL=your-base-url-here
 ```
 
-IMPORTANT: This is already set up in Vocareum workspace
+**Troubleshooting:**
+- **`Error: ANTHROPIC_MODEL is not set`** — make sure you ran `cp .env.example .env`
+- **`Error: API key not found`** — in Vocareum this is pre-configured; locally, set `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` in `.env`
 
 ## Tasks
 
@@ -114,6 +122,7 @@ for await (const message of query({
 ## Run
 
 ```bash
+# From this directory (lesson-08-claude-skills/exercise/starter)
 npm start
 ```
 
