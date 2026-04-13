@@ -1,4 +1,4 @@
-# Warm-Up Exercise: Getting Started with Your Workspace
+# Exercise: Getting Started with Your Workspace
 
 ## Objective
 Familiarize yourself with the Vocareum workspace, Claude Code CLI, and the Claude Agent SDK — the core tools you'll use throughout this course.
