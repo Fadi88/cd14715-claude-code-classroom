@@ -36,10 +36,14 @@ async function testWithThinking() {
 
   console.log(`💭 Thinking steps captured:`);
 
-  // Print the reasoning steps
+  // Print the reasoning steps with clear visual separators
   result.thinkingSteps.forEach((step, index) => {
-    console.log(`\n[Reasoning Block ${index + 1}]:\n${step}`);
+    console.log(`\n${"=".repeat(50)}`);
+    console.log(`🧠 [Reasoning Block ${index + 1}]`);
+    console.log("=".repeat(50));
+    console.log(step);
   });
+  console.log(`\n${"=".repeat(50)}\n`);
 
   console.log("\n✅ Extended thinking provides audit trail for compliance!");
 }
