@@ -63,6 +63,11 @@ Customer History:
 - Account Age: ${transaction.customerHistory.accountAgeDays} days
 - Previous Risk Flags: ${transaction.customerHistory.previousFlags}
 
+In your internal reasoning process (thinking block), make sure to:
+1. Actively compare and analyze at least two distinct hypotheses (Hypothesis A: Legitimate transaction/travel, Hypothesis B: Account takeover/fraud).
+2. Explicitly outline any potential false positives and weigh the trade-offs of holding vs. declining.
+3. Show your detailed step-by-step logic and calculation check.
+
 Provide your final analysis in a clear structured report including:
 - Overall Fraud Risk Level (LOW, MEDIUM, HIGH, or CRITICAL)
 - Key indicators identified (anomalies in location, velocity, or amount)

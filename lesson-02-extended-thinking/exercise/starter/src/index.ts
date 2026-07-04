@@ -60,7 +60,6 @@ async function main() {
 
   // Optional: implement a test without thinking for comparison
   // TODO: Test without thinking
-  // await testWithoutThinking()
   await testWithThinking();
 }
 
