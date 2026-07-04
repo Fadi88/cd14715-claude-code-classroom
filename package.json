@@ -1,7 +1,13 @@
 {
   "name": "cd14715-claude-code-classroom",
   "private": true,
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
   "workspaces": [
+    "lesson-00-warm-up/exercise/starter",
     "lesson-01-model-selection/demo",
     "lesson-01-model-selection/exercise/starter",
     "lesson-01-model-selection/exercise/solution",
@@ -32,6 +38,9 @@
     "lesson-12-evaluating-agents/demo",
     "lesson-12-evaluating-agents/exercise/starter",
     "lesson-12-evaluating-agents/exercise/solution",
+    "lesson-13-computer-use/demo",
+    "lesson-13-computer-use/exercise/starter",
+    "lesson-13-computer-use/exercise/solution",
     "project/starter"
   ]
 }

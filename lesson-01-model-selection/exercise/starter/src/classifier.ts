@@ -56,7 +56,7 @@ async function testHaiku() {
   const system = `YOUR SYSTEM PROMPT HERE`;
 
   // TODO: Call Claude with Haiku model
-  const result = null; // Replace with API call
+  const result = null as any; // Replace with API call
 
   // TODO: Display results
   console.log(`Result: ${result.text}`);
@@ -83,7 +83,7 @@ async function testSonnet() {
 
   // TODO: Call Claude with Sonnet model
   // Use: callClaude("sonnet", system, TICKETS.moderate)
-  const result = null; // Replace with API call
+  const result = null as any; // Replace with API call
 
   // TODO: Display results
   console.log(`Result:\n${result.text}`);
@@ -110,7 +110,7 @@ async function testOpus() {
 
   // TODO: Call Claude with Opus model
   // Use: callClaude("opus", system, TICKETS.complex)
-  const result = null; // Replace with API call
+  const result = null as any; // Replace with API call
 
   // TODO: Display results
   console.log(`Result:\n${result.text}`);
@@ -136,7 +136,7 @@ async function testCompare() {
   // TODO: Call all three models with the same task
   // Loop through: ["haiku", "sonnet", "opus"]
   // Store results in array with: { model, text, ms, inputTokens, outputTokens, cost }
-  const results = [];
+  const results: any[] = [];
   // YOUR CODE HERE
 
   // TODO: Display comparison table
