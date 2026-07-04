@@ -36,14 +36,17 @@ async function testWithThinking() {
 
   console.log(`💭 Thinking steps captured:`);
 
-  // Print the reasoning steps with clear visual separators
-  result.thinkingSteps.forEach((step, index) => {
-    console.log(`\n${"=".repeat(50)}`);
-    console.log(`🧠 [Reasoning Block ${index + 1}]`);
-    console.log("=".repeat(50));
-    console.log(step);
+  // Print the reasoning steps with individual chain link separators
+  result.thinkingSteps.forEach((step, blockIdx) => {
+    const links = step.split(/\n\n+/).map(l => l.trim()).filter(Boolean);
+    
+    links.forEach((link, linkIdx) => {
+      console.log(`\n🔗 [Thought Link ${blockIdx + 1}.${linkIdx + 1}]`);
+      console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+      console.log(link);
+      console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    });
   });
-  console.log(`\n${"=".repeat(50)}\n`);
 
   console.log("\n✅ Extended thinking provides audit trail for compliance!");
 }
