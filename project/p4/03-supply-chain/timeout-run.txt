@@ -1,0 +1,64 @@
+﻿# Supply Chain Risk Briefing — Meridian
+
+> Sources unavailable: logistics unavailable (timeout)
+
+## Well-Established
+### average_lead_time_days  _[single source only]_
+- Reported values by source:
+    - 12.0 days — supplier_audit (as of 2026-04-10)
+
+### corrective_action_implemented  _[single source only]_
+> Meridian implemented enhanced lot traceability and additional in-line thermal screening to prevent recurrence. (industry_news, 2026-02-15)
+
+### defect_rate_ppm  _[corroborated across 2 sources]_
+- Reported values by source:
+    - 180.0 ppm — supplier_audit (as of 2026-04-10)
+    - 190.0 ppm — internal_quality (as of 2026-04-08)
+
+### delivery_mitigation_action  _[single source only]_
+> Meridian Components is activating contingency routing through alternate West Coast terminals and expediting select air freight to mitigate delivery delays. (industry_news, 2026-03-16)
+
+### field_quality_concern  _[single source only]_
+> Meridian Components issued a voluntary precautionary quality advisory/recall for a lot of surface-mount capacitor assemblies due to a potential reliability concern. (industry_news, 2026-02-15)
+> A single production batch manufactured in late December 2025 may exhibit elevated leakage current under sustained thermal stress. (industry_news, 2026-02-15)
+> No field failures resulted in customer-end product damage, per Meridian. (industry_news, 2026-02-15)
+
+### field_return_rate  _[single source only]_
+- Reported values by source:
+    - 1.4 percent — internal_quality (as of 2026-04-08)
+
+### logistics_concentration_risk  _[single source only]_
+> Meridian Components relies primarily on a single port of entry (Long Beach) for inbound electronics components, creating outsized exposure to localized labor actions and concentrated logistics-lane fragility. (industry_news, 2026-03-16)
+
+### manufacturing_process_defect  _[single source only]_
+> The quality issue was attributed to a drift in a dielectric curing parameter on one production line, which has since been corrected and revalidated. (industry_news, 2026-02-15)
+
+### on_time_delivery_rate  _[single source only]_
+- Reported values by source:
+    - 95.0 percent — supplier_audit (as of 2026-04-10)
+
+### port_disruption_delivery_delay  _[single source only]_
+> Meridian Components had several inbound containers stranded at anchor during the Port of Long Beach 72-hour labor strike, delaying deliveries to multiple customers by an estimated five to nine days. (industry_news, 2026-03-16)
+
+### recall_scope  _[single source only]_
+> Fewer than 40,000 units across roughly a dozen customer accounts fell within the affected date code range. (industry_news, 2026-02-15)
+
+### supplier_financial_distress  _[single source only]_  ⚠️ ESCALATE
+- escalation: ambiguous supplier identity — request an identifier
+> A company named 'Meridian' has drawn down emergency credit lines, missed payments to subcontractors, and retained restructuring advisers amid deteriorating cash flow. (industry_news, 2024-01-01)
+
+### supply_disruption  _[single source only]_
+> The advisory forced at least one contract manufacturer to briefly reinspect incoming inventory before resuming assembly, indicating minor supply disruption. (industry_news, 2026-02-15)
+
+
+## Contested
+_none_
+
+## Incomplete
+### late_shipment_count  _[missing source: timeout reading logistics]_
+- missing source: timeout reading logistics
+
+### production_capacity_utilization  _[missing source: no source reported this metric]_  ⚠️ ESCALATE
+- escalation: high-impact metric has no usable source
+- missing source: no source reported this metric
+

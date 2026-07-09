@@ -1,0 +1,9 @@
+OS: Windows 11 (22H2)
+Python: Python 3.11.9
+
+Setup notes:
+- Each system was installed from its solution/ directory using: pip install -e ".[dev]"
+- Directories were moved to short paths (C:\Users\fady8\sys1, sys2, sys3) to avoid Windows MAX_PATH limits.
+- System 3 required running Unblock-File on cygrpc.pyd to lift the AppLocker Mark-of-the-Web block on DLL files extracted from the pip wheel.
+- PYTHONIOENCODING=utf8 was set to avoid UnicodeEncodeError on System 3 console output.
+- All three systems ran live against claude-sonnet-4-5-20250929 via the Vocareum API proxy.
